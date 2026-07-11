@@ -32,6 +32,14 @@
         <button class="btn" type="submit">Enviar link</button>
       </form>
       <div id="login-msg" class="notice" hidden></div>
+      <form id="code-form" class="form-row" hidden>
+        <div class="field">
+          <label for="code">Código do e-mail (6 dígitos)</label>
+          <input id="code" inputmode="numeric" pattern="[0-9]{6}" maxlength="6"
+                 placeholder="123456" autocomplete="one-time-code" required>
+        </div>
+        <button class="btn" type="submit">Entrar com o código</button>
+      </form>
     </section>
 
     <!-- Dashboard -->

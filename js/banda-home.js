@@ -18,6 +18,31 @@ async function init() {
 
 function renderLogin() {
   $("login").hidden = false;
+
+  // Erro vindo do link do e-mail (ex.: link expirado ou consumido pelo
+  // antivírus corporativo) chega no hash da URL.
+  const hash = new URLSearchParams(location.hash.slice(1));
+  if (hash.get("error_code") === "otp_expired") {
+    show($("login-msg"),
+      "Este link já expirou ou foi usado. Peça um novo e, se preferir, entre digitando o código de 6 dígitos do e-mail.",
+      "error");
+    history.replaceState(null, "", location.pathname);
+  }
+
+  $("code-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const { error } = await db.auth.verifyOtp({
+      email: $("email").value.trim(),
+      token: $("code").value.trim(),
+      type: "email",
+    });
+    if (error) {
+      show($("login-msg"), "Código inválido ou expirado — peça um novo e-mail.", "error");
+    } else {
+      location.reload();
+    }
+  });
+
   $("login-form").addEventListener("submit", async (e) => {
     e.preventDefault();
     const email = $("email").value.trim();
@@ -39,7 +64,10 @@ function renderLogin() {
       show($("login-msg"), reason, "error");
     } else {
       show($("login-msg"),
-        `Link enviado para ${email}. Abra o e-mail e clique para entrar.`, "ok");
+        `E-mail enviado para ${email}. Clique no link — ou digite abaixo o código de 6 dígitos que está no e-mail.`,
+        "ok");
+      $("code-form").hidden = false;
+      $("code").focus();
     }
   });
 }
