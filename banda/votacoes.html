@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Votações · Backstage · The James</title>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Righteous&family=Work+Sans:wght@400;600&family=Space+Mono&display=swap">
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body class="banda">
+  <div class="stripes"></div>
+  <nav class="site">
+    <a class="logo" href="index.html"><span>The</span> James</a>
+    <a href="repertorio.html">Repertório</a>
+    <a href="shows.html">Shows</a>
+    <a href="candidatas.html">Candidatas</a>
+    <a href="votacoes.html" class="active">Votações</a>
+  </nav>
+  <div class="wrap">
+    <div class="banda-header"><h1>Votações</h1></div>
+    <p class="muted">Cada integrante tem X votos (o número de vagas). Os votos ficam ocultos até o
+      encerramento; as mais votadas entram automaticamente no repertório.</p>
+    <div id="msg" class="notice" hidden></div>
+
+    <section id="open-polls"><h2>Abertas</h2><div id="open-list"></div></section>
+
+    <section id="new-poll">
+      <h2>Nova votação</h2>
+      <form id="poll-form">
+        <div class="form-row">
+          <div class="field grow"><label for="p-title">Título</label>
+            <input id="p-title" required placeholder="Próximas músicas do repertório"></div>
+          <div class="field"><label for="p-winners">Vagas (X)</label>
+            <input id="p-winners" type="number" min="1" value="3" required style="width:80px"></div>
+          <div class="field"><label for="p-deadline">Prazo</label>
+            <input id="p-deadline" type="datetime-local" required></div>
+        </div>
+        <div class="card" id="cand-picker"></div>
+        <button class="btn" type="submit">Abrir votação</button>
+      </form>
+    </section>
+
+    <section id="closed-polls"><h2>Encerradas</h2><div id="closed-list"></div></section>
+  </div>
+  <script type="module" src="../js/banda-votacoes.js"></script>
+</body>
+</html>

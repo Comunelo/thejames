@@ -1,0 +1,216 @@
+// Backstage: votações (feature D).
+// Regras: X votos por integrante (1 por música), votos ocultos até encerrar,
+// top X promovidas ao repertório; empate na última vaga → quem encerra escolhe.
+import { db, requireAuth, el, show, fmtDateTime } from "./db.js";
+
+const $ = (id) => document.getElementById(id);
+const { session } = await requireAuth();
+await refresh();
+
+async function refresh() {
+  await Promise.all([renderOpen(), renderPicker(), renderClosed()]);
+}
+
+// ---------- criar votação ----------
+
+async function renderPicker() {
+  const { data: cands } = await db.from("candidates")
+    .select("*").eq("status", "sugerida").order("created_at");
+  const box = $("cand-picker");
+  if (!cands?.length) {
+    box.replaceChildren(el("p", { class: "empty" },
+      "Nenhuma candidata sugerida — adicione músicas em Candidatas primeiro."));
+    return;
+  }
+  box.replaceChildren(
+    el("label", {}, "Candidatas na votação:"),
+    ...cands.map((c) => el("div", { class: "cand" },
+      el("input", { type: "checkbox", id: "pick-" + c.id, value: c.id }),
+      el("label", { for: "pick-" + c.id, style: "font-size:15px;color:var(--ink)" },
+        el("b", {}, c.title), ` — ${c.artist}`),
+    )),
+  );
+}
+
+$("poll-form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const ids = [...document.querySelectorAll("#cand-picker input:checked")].map((i) => i.value);
+  const winners = parseInt($("p-winners").value, 10);
+  if (ids.length <= winners) {
+    return show($("msg"), "Escolha mais candidatas do que vagas — senão não há o que votar.", "error");
+  }
+  const { error } = await db.rpc("create_poll", {
+    p_title: $("p-title").value.trim(),
+    p_num_winners: winners,
+    p_deadline: new Date($("p-deadline").value).toISOString(),
+    p_candidate_ids: ids,
+  });
+  if (error) return show($("msg"), "Erro ao criar votação: " + error.message, "error");
+  e.target.reset();
+  show($("msg"), "Votação aberta! Avise a banda.", "ok");
+  await refresh();
+});
+
+// ---------- votações abertas ----------
+
+async function renderOpen() {
+  const { data: polls } = await db.from("polls")
+    .select("*, poll_candidates(candidate:candidates(*))")
+    .eq("status", "aberta").order("created_at", { ascending: false });
+  const box = $("open-list");
+  if (!polls?.length) {
+    box.replaceChildren(el("p", { class: "empty" }, "Nenhuma votação aberta."));
+    return;
+  }
+  box.replaceChildren(...await Promise.all(polls.map(openCard)));
+}
+
+async function openCard(poll) {
+  const [{ data: myVotes }, { data: progress }] = await Promise.all([
+    db.from("votes").select("candidate_id")
+      .eq("poll_id", poll.id).eq("member_id", session.user.id),
+    db.rpc("poll_progress", { p_poll_id: poll.id }),
+  ]);
+  const mine = new Set((myVotes ?? []).map((v) => v.candidate_id));
+  const used = mine.size;
+
+  const usedLabel = el("span", { class: "mono muted" },
+    `${used} de ${poll.num_winners} votos usados`);
+
+  const rows = poll.poll_candidates.map(({ candidate: c }) => {
+    const cb = el("input", {
+      type: "checkbox", id: `v-${poll.id}-${c.id}`,
+      onchange: async (e) => {
+        const op = e.target.checked
+          ? db.from("votes").insert({ poll_id: poll.id, candidate_id: c.id, member_id: session.user.id })
+          : db.from("votes").delete().eq("poll_id", poll.id)
+              .eq("candidate_id", c.id).eq("member_id", session.user.id);
+        const { error } = await op;
+        if (error) show($("msg"), error.message, "error");
+        await renderOpen();
+      },
+    });
+    if (mine.has(c.id)) cb.checked = true;
+    else if (used >= poll.num_winners) cb.disabled = true;
+    return el("div", { class: "cand" },
+      cb,
+      el("label", { for: cb.id, style: "font-size:15px;color:var(--ink)" },
+        el("b", {}, c.title), ` — ${c.artist}`),
+      c.spotify_url
+        ? el("a", { class: "spotify", href: c.spotify_url, target: "_blank", rel: "noopener", style: "margin-left:auto" }, "▶")
+        : null,
+    );
+  });
+
+  const voters = el("div", { class: "voters" }, ...(progress ?? []).map((m) =>
+    el("span", { class: "tag" + (m.votes_used > 0 ? " voted" : "") },
+      `${m.name} ${m.votes_used > 0 ? "✔" : "…"}`)));
+
+  const canClose = poll.created_by === session.user.id || new Date() >= new Date(poll.deadline);
+
+  return el("div", { class: "card pollcard" },
+    el("h3", { style: "margin-top:0" }, poll.title, " ",
+      el("span", { class: "tag aberta" }, "aberta")),
+    el("p", { class: "muted", style: "margin:4px 0 10px" },
+      `${poll.num_winners} vaga(s) · prazo ${fmtDateTime(poll.deadline)} · votos ocultos até encerrar`),
+    ...rows, usedLabel, voters,
+    el("div", { class: "form-row" },
+      el("button", {
+        class: "btn small" + (canClose ? "" : " ghost"),
+        onclick: () => closePoll(poll),
+        title: canClose ? "" : "Antes do prazo, só quem criou pode encerrar",
+      }, "Encerrar e apurar"),
+    ),
+  );
+}
+
+async function closePoll(poll, tiebreak = null) {
+  if (!tiebreak &&
+      !confirm(`Encerrar "${poll.title}" e promover as ${poll.num_winners} mais votadas ao repertório?`)) return;
+  const { error } = await db.rpc("close_poll", {
+    p_poll_id: poll.id, p_tiebreak: tiebreak,
+  });
+  if (error) {
+    if (error.message.includes("EMPATE")) return tieBreak(poll, error);
+    return show($("msg"), error.message, "error");
+  }
+  show($("msg"), "Votação encerrada — vencedoras já estão no repertório! 🎸", "ok");
+  await refresh();
+}
+
+// Empate na última vaga: quem encerra escolhe entre as empatadas.
+function tieBreak(poll, error) {
+  const tied = JSON.parse(error.details || "[]");
+  const slots = parseInt(error.hint || "1", 10);
+  const picks = tied.map((c) => {
+    const cb = el("input", { type: "checkbox", value: c.id });
+    return { c, cb };
+  });
+  const dialog = el("div", { class: "card pollcard" },
+    el("h3", { style: "margin-top:0" }, "Empate na última vaga"),
+    el("p", { class: "muted" },
+      `Estas músicas empataram. Escolha ${slots} para completar as vagas:`),
+    ...picks.map(({ c, cb }) => el("div", { class: "cand" }, cb,
+      el("label", {}, el("b", {}, c.title), ` — ${c.artist}`))),
+    el("div", { class: "form-row" },
+      el("button", {
+        class: "btn small",
+        onclick: () => {
+          const chosen = picks.filter((p) => p.cb.checked).map((p) => p.c.id);
+          if (chosen.length !== slots) {
+            return show($("msg"), `Escolha exatamente ${slots}.`, "error");
+          }
+          dialog.remove();
+          closePoll(poll, chosen);
+        },
+      }, "Confirmar desempate"),
+      el("button", { class: "btn small ghost", onclick: () => dialog.remove() }, "Cancelar"),
+    ),
+  );
+  $("open-list").prepend(dialog);
+  dialog.scrollIntoView({ behavior: "smooth" });
+}
+
+// ---------- votações encerradas ----------
+
+async function renderClosed() {
+  const { data: polls } = await db.from("polls")
+    .select("*, poll_candidates(candidate:candidates(id,title,artist))")
+    .eq("status", "encerrada").order("created_at", { ascending: false });
+  const box = $("closed-list");
+  if (!polls?.length) {
+    box.replaceChildren(el("p", { class: "empty" }, "Nenhuma votação encerrada ainda."));
+    return;
+  }
+  box.replaceChildren(...await Promise.all(polls.map(closedCard)));
+}
+
+async function closedCard(poll) {
+  const [{ data: votes }, { data: promoted }] = await Promise.all([
+    db.from("votes").select("candidate_id").eq("poll_id", poll.id),
+    db.from("songs").select("title, artist").eq("from_poll_id", poll.id),
+  ]);
+  const count = {};
+  for (const v of votes ?? []) count[v.candidate_id] = (count[v.candidate_id] ?? 0) + 1;
+  const winners = new Set((promoted ?? []).map((s) => `${s.title}|${s.artist}`));
+  const max = Math.max(1, ...Object.values(count));
+
+  const rows = poll.poll_candidates
+    .map(({ candidate: c }) => ({ c, n: count[c.id] ?? 0 }))
+    .sort((a, b) => b.n - a.n)
+    .map(({ c, n }) => el("div", { class: "cand" },
+      el("span", { class: "mono", style: "min-width:2ch" }, String(n)),
+      el("div", { style: "flex:1" },
+        el("div", {},
+          winners.has(`${c.title}|${c.artist}`) ? "🏆 " : "",
+          el("b", {}, c.title), ` — ${c.artist}`),
+        el("div", { class: "votebar", style: `width:${(n / max) * 100}%;opacity:${n ? 1 : 0.15}` }),
+      ),
+    ));
+
+  return el("div", { class: "card pollcard" },
+    el("h3", { style: "margin-top:0" }, poll.title, " ",
+      el("span", { class: "tag encerrada" }, "encerrada")),
+    ...rows,
+  );
+}

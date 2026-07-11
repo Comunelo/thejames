@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Candidatas · Backstage · The James</title>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Righteous&family=Work+Sans:wght@400;600&family=Space+Mono&display=swap">
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body class="banda">
+  <div class="stripes"></div>
+  <nav class="site">
+    <a class="logo" href="index.html"><span>The</span> James</a>
+    <a href="repertorio.html">Repertório</a>
+    <a href="shows.html">Shows</a>
+    <a href="candidatas.html" class="active">Candidatas</a>
+    <a href="votacoes.html">Votações</a>
+  </nav>
+  <div class="wrap">
+    <div class="banda-header"><h1>Candidatas</h1></div>
+    <p class="muted">A caixa de sugestões da banda. Daqui saem as músicas das próximas votações.</p>
+
+    <h2>Sugerir música</h2>
+    <form id="add-form" class="form-row">
+      <div class="field grow"><label for="f-title">Música</label><input id="f-title" required></div>
+      <div class="field grow"><label for="f-artist">Artista</label><input id="f-artist" required></div>
+      <div class="field grow"><label for="f-spotify">Link do Spotify</label>
+        <input id="f-spotify" type="url" placeholder="https://open.spotify.com/…"></div>
+      <div class="field grow"><label for="f-note">Por quê? (opcional)</label><input id="f-note"></div>
+      <button class="btn" type="submit">Sugerir</button>
+    </form>
+    <div id="msg" class="notice" hidden></div>
+
+    <div class="form-row">
+      <div class="field"><label for="filter">Mostrar</label>
+        <select id="filter">
+          <option value="ativas">Sugeridas + em votação</option>
+          <option value="sugerida">Só sugeridas</option>
+          <option value="arquivada">Arquivadas</option>
+          <option value="aprovada">Aprovadas</option>
+          <option value="todas">Todas</option>
+        </select></div>
+    </div>
+
+    <div class="tblwrap">
+      <table>
+        <thead><tr><th>Música</th><th>Artista</th><th>Spotify</th><th>Sugerida por</th><th>Status</th><th></th></tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+    <p class="empty" id="empty" hidden>Nenhuma candidata aqui.</p>
+  </div>
+  <script type="module" src="../js/banda-candidatas.js"></script>
+</body>
+</html>

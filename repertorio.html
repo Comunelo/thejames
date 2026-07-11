@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="As músicas que The James toca — classic rock e yacht rock dos anos 70 e 80.">
+  <title>Repertório · The James</title>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Righteous&family=Work+Sans:wght@400;600&family=Space+Mono&display=swap">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="stripes"></div>
+  <nav class="site">
+    <a class="logo" href="index.html"><span>The</span> James</a>
+    <a href="repertorio.html" class="active">Repertório</a>
+    <a href="shows.html">Shows</a>
+    <a href="banda/index.html">Backstage</a>
+  </nav>
+  <div class="wrap">
+    <header class="hero" style="padding-bottom:10px">
+      <p class="kicker">O que a gente toca</p>
+      <h1>Repertório</h1>
+      <p class="lede">Os clássicos que você vai ouvir num show do The James — com link
+        para matar a saudade no Spotify.</p>
+    </header>
+
+    <div class="form-row">
+      <div class="field grow"><label for="search">Buscar</label>
+        <input id="search" type="search" placeholder="música ou artista…"></div>
+      <span class="mono muted" id="count"></span>
+    </div>
+
+    <div class="tblwrap">
+      <table>
+        <thead><tr><th>Música</th><th>Artista</th><th>Ouvir</th></tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+    <p class="empty" id="empty" hidden>Nada por aqui (ainda).</p>
+  </div>
+  <footer class="site"><div class="wrap">The James · www.thejames.com.br</div></footer>
+  <script type="module" src="js/public-repertorio.js"></script>
+</body>
+</html>

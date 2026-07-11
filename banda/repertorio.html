@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Repertório · Backstage · The James</title>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Righteous&family=Work+Sans:wght@400;600&family=Space+Mono&display=swap">
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body class="banda">
+  <div class="stripes"></div>
+  <nav class="site">
+    <a class="logo" href="index.html"><span>The</span> James</a>
+    <a href="repertorio.html" class="active">Repertório</a>
+    <a href="shows.html">Shows</a>
+    <a href="candidatas.html">Candidatas</a>
+    <a href="votacoes.html">Votações</a>
+  </nav>
+  <div class="wrap">
+    <div class="banda-header">
+      <h1>Repertório</h1>
+      <span class="who mono" id="count"></span>
+    </div>
+
+    <h2>Nova música</h2>
+    <form id="add-form" class="form-row">
+      <div class="field grow"><label for="f-title">Música</label><input id="f-title" required></div>
+      <div class="field grow"><label for="f-artist">Artista</label><input id="f-artist" required></div>
+      <div class="field grow"><label for="f-spotify">Link do Spotify</label>
+        <input id="f-spotify" type="url" placeholder="https://open.spotify.com/…"></div>
+      <button class="btn" type="submit">Adicionar</button>
+    </form>
+    <div id="msg" class="notice" hidden></div>
+
+    <div class="form-row">
+      <div class="field grow"><label for="search">Buscar</label>
+        <input id="search" type="search" placeholder="música ou artista…"></div>
+      <div class="field"><label for="filter">Mostrar</label>
+        <select id="filter">
+          <option value="ativa">Ativas</option>
+          <option value="aposentada">Aposentadas</option>
+          <option value="todas">Todas</option>
+        </select></div>
+    </div>
+
+    <div class="tblwrap">
+      <table>
+        <thead><tr><th>Música</th><th>Artista</th><th>Spotify</th><th>Status</th><th></th></tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+    <p class="empty" id="empty" hidden>Nenhuma música encontrada.</p>
+  </div>
+  <script type="module" src="../js/banda-repertorio.js"></script>
+</body>
+</html>

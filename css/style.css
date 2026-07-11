@@ -1,0 +1,187 @@
+/* The James — identidade visual 70s/80s retro rock
+   Fundo "vinil", acentos de pôr do sol, display Righteous. */
+
+:root {
+  --bg: #1B110B;
+  --bg-raised: #271A10;
+  --ink: #F1E3C8;
+  --muted: #B3987C;
+  --line: #4A3521;
+  --accent: #F0803C;
+  --accent-ink: #1B110B;
+  --gold: #E2AB43;
+  --burg: #8E3A26;
+  --ok: #7FA65A;
+  --danger: #D96B4A;
+  --stripe: linear-gradient(to right, #8E3A26, #D4642A, #E89239, #EFC15C);
+  --font-display: 'Righteous', 'Cooper Black', Georgia, sans-serif;
+  --font-body: 'Work Sans', 'Segoe UI', sans-serif;
+  --font-mono: 'Space Mono', Consolas, monospace;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+.stripes { height: 10px; background: var(--stripe); }
+
+a { color: var(--accent); }
+h1, h2, h3 { font-family: var(--font-display); font-weight: 400; letter-spacing: 0.01em; }
+h1 { font-size: clamp(34px, 6vw, 54px); line-height: 1.05; margin: 0 0 12px; }
+h2 { font-size: 26px; margin: 34px 0 12px; color: var(--gold); }
+h3 { font-size: 19px; margin: 22px 0 8px; }
+
+.wrap { max-width: 900px; margin: 0 auto; padding: 0 20px 70px; }
+
+/* ---------- navegação ---------- */
+nav.site {
+  display: flex; align-items: center; gap: 18px; flex-wrap: wrap;
+  padding: 16px 20px; max-width: 900px; margin: 0 auto;
+}
+nav.site .logo {
+  font-family: var(--font-display); font-size: 22px; color: var(--ink);
+  text-decoration: none; margin-right: auto;
+}
+nav.site .logo span { color: var(--gold); }
+nav.site a { color: var(--muted); text-decoration: none; font-size: 15px; }
+nav.site a:hover, nav.site a.active { color: var(--accent); }
+
+/* ---------- hero público ---------- */
+.hero { padding: 64px 0 40px; text-align: left; }
+.hero .kicker {
+  font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.25em;
+  text-transform: uppercase; color: var(--accent); margin: 0 0 10px;
+}
+.hero h1 .the {
+  display: block; font-size: 0.4em; letter-spacing: 0.35em;
+  text-transform: uppercase; color: var(--gold);
+}
+.hero p.lede { font-size: 19px; color: var(--muted); max-width: 56ch; }
+
+/* ---------- componentes ---------- */
+.card {
+  background: var(--bg-raised);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 18px 20px;
+  margin: 14px 0;
+}
+
+.btn {
+  display: inline-block;
+  font-family: var(--font-body); font-weight: 600; font-size: 15px;
+  background: var(--accent); color: var(--accent-ink);
+  border: none; border-radius: 24px; padding: 9px 22px;
+  cursor: pointer; text-decoration: none;
+}
+.btn:hover { filter: brightness(1.1); }
+.btn.ghost { background: transparent; color: var(--accent); border: 2px solid var(--accent); padding: 7px 20px; }
+.btn.small { font-size: 13px; padding: 5px 14px; }
+.btn.danger { background: transparent; color: var(--danger); border: 2px solid var(--danger); padding: 7px 20px; }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+input, select, textarea {
+  font-family: var(--font-body); font-size: 15px;
+  background: var(--bg); color: var(--ink);
+  border: 1px solid var(--line); border-radius: 8px;
+  padding: 8px 12px;
+}
+input:focus, select:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+label { font-size: 13px; color: var(--muted); display: block; margin-bottom: 3px; }
+
+.field { display: flex; flex-direction: column; gap: 2px; }
+.form-row { display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; margin: 10px 0; }
+.form-row .grow { flex: 1 1 180px; }
+
+/* ---------- tabelas / listas ---------- */
+.tblwrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; margin: 14px 0; }
+table { border-collapse: collapse; width: 100%; font-size: 15px; background: var(--bg-raised); }
+th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+th {
+  font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--gold);
+}
+tr:last-child td { border-bottom: none; }
+
+.tag {
+  display: inline-block; font-family: var(--font-mono); font-size: 11px;
+  letter-spacing: 0.08em; border-radius: 20px; padding: 2px 10px;
+  border: 1px solid var(--line); color: var(--muted); white-space: nowrap;
+}
+.tag.ativa, .tag.aberta, .tag.aprovada { border-color: var(--ok); color: var(--ok); }
+.tag.aposentada, .tag.encerrada, .tag.arquivada { border-color: var(--muted); }
+.tag.em_votacao { border-color: var(--gold); color: var(--gold); }
+.tag.sugerida { border-color: var(--accent); color: var(--accent); }
+
+.spotify { text-decoration: none; font-size: 14px; white-space: nowrap; }
+
+.muted { color: var(--muted); }
+.mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.empty { color: var(--muted); font-style: italic; padding: 18px 4px; }
+
+/* ---------- tracklist (setlist pública e impressão) ---------- */
+.tracklist { list-style: none; padding: 0; margin: 10px 0; max-width: 60ch; }
+.tracklist li {
+  display: flex; align-items: baseline; gap: 10px; padding: 6px 0;
+  border-bottom: 1px dotted var(--line);
+}
+.tracklist .n { font-family: var(--font-mono); color: var(--gold); min-width: 2ch; }
+.tracklist .artist { color: var(--muted); margin-left: auto; text-align: right; }
+
+/* ---------- mensagens ---------- */
+.notice { border-left: 4px solid var(--gold); background: var(--bg-raised); padding: 10px 16px; border-radius: 0 10px 10px 0; margin: 14px 0; }
+.notice.error { border-color: var(--danger); }
+.notice.ok { border-color: var(--ok); }
+
+/* ---------- backstage ---------- */
+body.banda h2 { color: var(--ink); }
+.banda-header { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; margin: 26px 0 6px; }
+.banda-header h1 { font-size: 30px; margin: 0; }
+.banda-header .who { margin-left: auto; color: var(--muted); font-size: 14px; }
+
+.menu-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; margin: 20px 0; }
+.menu-grid a.card { display: block; text-decoration: none; color: var(--ink); }
+.menu-grid a.card:hover { border-color: var(--accent); }
+.menu-grid .card h3 { margin: 0 0 4px; color: var(--accent); }
+.menu-grid .card p { margin: 0; font-size: 14px; color: var(--muted); }
+
+.rowactions { display: flex; gap: 6px; flex-wrap: wrap; }
+.iconbtn {
+  background: transparent; border: 1px solid var(--line); color: var(--muted);
+  border-radius: 8px; padding: 3px 9px; cursor: pointer; font-size: 13px;
+}
+.iconbtn:hover { border-color: var(--accent); color: var(--accent); }
+.iconbtn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* votação */
+.pollcard .cand { display: flex; align-items: center; gap: 10px; padding: 7px 0; border-bottom: 1px dotted var(--line); }
+.pollcard .cand:last-child { border-bottom: none; }
+.pollcard .cand input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--accent); }
+.pollcard .votebar { height: 8px; background: var(--stripe); border-radius: 4px; }
+.voters { display: flex; gap: 8px; flex-wrap: wrap; margin: 10px 0; }
+.voters .tag.voted { border-color: var(--ok); color: var(--ok); }
+
+footer.site {
+  margin-top: 60px; padding: 24px 0; border-top: 1px solid var(--line);
+  color: var(--muted); font-size: 13px; font-family: var(--font-mono);
+}
+
+/* ---------- impressão de setlist ---------- */
+@media print {
+  body { background: #fff; color: #000; font-size: 14pt; }
+  nav.site, .stripes, footer.site, .no-print { display: none !important; }
+  .print-only { display: block !important; }
+  .tracklist li { border-color: #999; }
+  .tracklist .n, .tracklist .artist { color: #555; }
+  h1, h2 { color: #000; }
+}
+.print-only { display: none; }
+
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }

@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Shows &amp; setlists · Backstage · The James</title>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Righteous&family=Work+Sans:wght@400;600&family=Space+Mono&display=swap">
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body class="banda">
+  <div class="stripes"></div>
+  <nav class="site">
+    <a class="logo" href="index.html"><span>The</span> James</a>
+    <a href="repertorio.html">Repertório</a>
+    <a href="shows.html" class="active">Shows</a>
+    <a href="candidatas.html">Candidatas</a>
+    <a href="votacoes.html">Votações</a>
+  </nav>
+  <div class="wrap">
+    <div class="banda-header"><h1>Shows &amp; setlists</h1></div>
+
+    <h2 class="no-print">Novo show</h2>
+    <form id="add-form" class="form-row no-print">
+      <div class="field"><label for="f-date">Data</label><input id="f-date" type="date" required></div>
+      <div class="field grow"><label for="f-venue">Local</label><input id="f-venue" required placeholder="Bar do Zé"></div>
+      <div class="field grow"><label for="f-city">Cidade</label><input id="f-city" required></div>
+      <button class="btn" type="submit">Criar</button>
+    </form>
+    <div id="msg" class="notice no-print" hidden></div>
+
+    <div id="show-list" class="no-print"></div>
+
+    <!-- Editor do show selecionado -->
+    <section id="editor" hidden>
+      <h2 class="no-print" id="ed-title"></h2>
+      <form id="ed-form" class="form-row no-print">
+        <div class="field"><label for="e-date">Data</label><input id="e-date" type="date" required></div>
+        <div class="field grow"><label for="e-venue">Local</label><input id="e-venue" required></div>
+        <div class="field grow"><label for="e-city">Cidade</label><input id="e-city" required></div>
+        <div class="field grow"><label for="e-notes">Notas (passagem de som, contato…)</label><input id="e-notes"></div>
+        <button class="btn ghost" type="submit">Salvar</button>
+      </form>
+      <div class="form-row no-print">
+        <label><input type="checkbox" id="e-public"> Divulgar na agenda pública</label>
+        <label><input type="checkbox" id="e-setlist-public"> Setlist visível para os fãs</label>
+        <button class="btn danger small" type="button" id="e-delete">Excluir show</button>
+      </div>
+
+      <h3 class="no-print">Setlist</h3>
+      <div class="tblwrap no-print">
+        <table>
+          <thead><tr><th>#</th><th>Música</th><th>Artista</th><th></th></tr></thead>
+          <tbody id="setlist-rows"></tbody>
+        </table>
+      </div>
+      <div class="form-row no-print">
+        <div class="field grow"><label for="song-pick">Adicionar do repertório</label>
+          <select id="song-pick"></select></div>
+        <button class="btn" type="button" id="song-add">Adicionar</button>
+        <button class="btn ghost" type="button" id="print">🖨 Imprimir setlist</button>
+      </div>
+    </section>
+
+    <!-- Versão de impressão -->
+    <div class="print-only" id="print-view"></div>
+  </div>
+  <script type="module" src="../js/banda-shows.js"></script>
+</body>
+</html>
