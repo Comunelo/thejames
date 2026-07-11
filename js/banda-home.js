@@ -27,9 +27,12 @@ function renderLogin() {
       options: { shouldCreateUser: false, emailRedirectTo: location.href },
     });
     if (error) {
-      show($("login-msg"),
-        "Não foi possível enviar o link. Confira se este e-mail está cadastrado na banda.",
-        "error");
+      const reason = error.code === "over_email_send_rate_limit"
+        ? "Muitos e-mails enviados em pouco tempo — o limite do serviço é 2 por hora. Aguarde e tente de novo."
+        : error.code === "otp_disabled" || error.status === 422
+          ? "Este e-mail não está cadastrado na banda."
+          : `Não foi possível enviar o link (${error.message}).`;
+      show($("login-msg"), reason, "error");
     } else {
       show($("login-msg"),
         `Link enviado para ${email}. Abra o e-mail e clique para entrar.`, "ok");
