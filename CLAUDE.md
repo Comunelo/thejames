@@ -12,6 +12,8 @@ Setup completo e passos pendentes: ver README.md.
 ## Cuidados neste ambiente
 - `git push` pode falhar com erro HTTP2 → usar `git -c http.version=HTTP/1.1 push`.
 - `js/config.js` contém a anon key do Supabase — pública por design, não é segredo.
-- SMTP (Resend) na porta 587; e-mails para caixas corporativas Microsoft caem em
-  quarentena e o SafeLinks consome magic links — por isso o login também aceita
-  código de 6 dígitos (template do e-mail precisa conter `{{ .Token }}`).
+- Login do backstage é usuário + senha (Supabase Auth com e-mail sintético
+  `<usuario>@thejames.local`; usuário = nome slugificado, senha inicial =
+  telefone). Nada de e-mail/SMTP — magic link foi abandonado porque caixas
+  corporativas Microsoft quarentenavam as mensagens. Integrantes são criados
+  pelo admin com `admin_create_member` no SQL Editor.

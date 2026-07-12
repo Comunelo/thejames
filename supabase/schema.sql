@@ -3,12 +3,18 @@
 -- Rode este arquivo inteiro no SQL Editor do Supabase (uma vez).
 -- =============================================================
 
+-- pgcrypto (crypt/gen_salt) — usado para gravar as senhas dos integrantes.
+create extension if not exists pgcrypto with schema extensions;
+
 -- ---------- TABELAS ----------
 
 -- Integrantes da banda (1 linha por usuário do Supabase Auth).
+-- O login é usuário + senha: o usuário é o nome "slugificado" e o e-mail
+-- em auth.users é sintético (<usuario>@thejames.local) — nunca recebe nada.
 create table public.members (
   id         uuid primary key references auth.users(id) on delete cascade,
   email      text unique not null,
+  username   text unique not null,
   name       text not null,
   instrument text,
   is_admin   boolean not null default false,
@@ -90,13 +96,25 @@ create table public.votes (
 
 -- ---------- FUNÇÕES AUXILIARES ----------
 
+-- "João Márcio" -> "joaomarcio" (minúsculas, sem acentos, só letras/dígitos).
+-- Mesma regra aplicada no front (js/banda-home.js) ao montar o e-mail de login.
+create or replace function public.slugify(p text)
+returns text language sql immutable as $$
+  select regexp_replace(
+    lower(translate(p,
+      'áàâãäéèêëíìîïóòôõöúùûüçñÁÀÂÃÄÉÈÊËÍÌÎÏÓÒÔÕÖÚÙÛÜÇÑ',
+      'aaaaaeeeeiiiiooooouuuucnaaaaaeeeeiiiiooooouuuucn')),
+    '[^a-z0-9]', '', 'g')
+$$;
+
 -- Cria a linha em members quando um usuário é criado no Auth
--- (os usuários são convidados manualmente pelo admin; não há cadastro aberto).
+-- (os usuários são criados pelo admin via admin_create_member; não há cadastro aberto).
 create or replace function public.handle_new_user()
 returns trigger language plpgsql security definer set search_path = public as $$
 begin
-  insert into public.members (id, email, name)
-  values (new.id, new.email, split_part(new.email, '@', 1))
+  insert into public.members (id, email, username, name)
+  values (new.id, new.email, split_part(new.email, '@', 1),
+          coalesce(new.raw_user_meta_data->>'name', split_part(new.email, '@', 1)))
   on conflict (id) do nothing;
   return new;
 end $$;
@@ -104,6 +122,66 @@ end $$;
 create trigger on_auth_user_created
   after insert on auth.users
   for each row execute function public.handle_new_user();
+
+-- ---------- ADMINISTRAÇÃO DE ACESSOS (rodar no SQL Editor, nunca via site) ----------
+
+-- Cria um integrante: usuário = nome slugificado, senha inicial = telefone.
+-- Ex.: select public.admin_create_member('Cláudio', '999999999');  -- usuário "claudio"
+-- Nomes repetidos na banda? Passe o usuário explícito no 4º parâmetro.
+create or replace function public.admin_create_member(
+  p_name text, p_phone text, p_instrument text default null, p_username text default null
+) returns text language plpgsql security definer set search_path = public as $$
+declare
+  v_id       uuid := gen_random_uuid();
+  v_username text := coalesce(p_username, public.slugify(p_name));
+  v_email    text := v_username || '@thejames.local';
+begin
+  if v_username = '' then raise exception 'Nome/usuário inválido.'; end if;
+  if exists (select 1 from auth.users where email = v_email) then
+    raise exception 'O usuário "%" já existe.', v_username;
+  end if;
+
+  -- Campos de token com '' (e não null) evitam erros conhecidos do GoTrue.
+  insert into auth.users (instance_id, id, aud, role, email, encrypted_password,
+    email_confirmed_at, raw_app_meta_data, raw_user_meta_data,
+    created_at, updated_at, confirmation_token, recovery_token,
+    email_change, email_change_token_new, email_change_token_current)
+  values ('00000000-0000-0000-0000-000000000000', v_id, 'authenticated', 'authenticated',
+    v_email, extensions.crypt(p_phone, extensions.gen_salt('bf')), now(),
+    '{"provider":"email","providers":["email"]}'::jsonb,
+    jsonb_build_object('name', p_name), now(), now(), '', '', '', '', '');
+
+  insert into auth.identities (provider_id, user_id, identity_data, provider,
+    last_sign_in_at, created_at, updated_at)
+  values (v_id::text, v_id,
+    jsonb_build_object('sub', v_id::text, 'email', v_email, 'email_verified', true),
+    'email', now(), now(), now());
+
+  -- O trigger on_auth_user_created já criou a linha em members.
+  update public.members
+  set name = p_name, instrument = coalesce(p_instrument, instrument)
+  where id = v_id;
+
+  return v_username;
+end $$;
+
+-- Redefine a senha de um integrante (quem esqueceu pede ao admin).
+-- Ex.: select public.admin_set_password('claudio', 'novasenha');
+create or replace function public.admin_set_password(p_username text, p_new_password text)
+returns void language plpgsql security definer set search_path = public as $$
+begin
+  update auth.users
+  set encrypted_password = extensions.crypt(p_new_password, extensions.gen_salt('bf')),
+      updated_at = now()
+  where email = p_username || '@thejames.local';
+  if not found then raise exception 'Usuário "%" não encontrado.', p_username; end if;
+end $$;
+
+-- Só o SQL Editor (role postgres) pode rodar as funções de administração.
+revoke execute on function public.admin_create_member(text, text, text, text)
+  from public, anon, authenticated;
+revoke execute on function public.admin_set_password(text, text)
+  from public, anon, authenticated;
 
 -- Verdadeiro se quem chama é um integrante logado.
 create or replace function public.is_member()

@@ -7,7 +7,7 @@ Site do **The James** (covers de classic rock & yacht rock, anos 70/80).
   shows, músicas candidatas e votações para escolher as próximas do repertório.
 
 **Stack**: HTML/CSS/JS puro hospedado no GitHub Pages + [Supabase](https://supabase.com)
-(banco Postgres, login por magic link e segurança via Row Level Security).
+(banco Postgres, login por usuário + senha e segurança via Row Level Security).
 Custo mensal: **R$ 0**.
 
 ---
@@ -21,19 +21,32 @@ Custo mensal: **R$ 0**.
 2. No painel, abra **SQL Editor**, cole o conteúdo de
    [`supabase/schema.sql`](supabase/schema.sql) e execute (**Run**).
 
-### 2. Desligar o cadastro aberto e convidar a banda
+### 2. Desligar o cadastro aberto e criar os acessos da banda
 
-1. Em **Authentication → Sign In / Up**: desative **"Allow new users to sign up"**.
-   (O login por magic link continua funcionando para usuários já cadastrados.)
-2. Em **Authentication → Users → Add user → Send invitation**: convide o e-mail
-   de cada um dos 5 integrantes. Cada convite cria o usuário e a linha na tabela
-   `members` automaticamente.
+O login do backstage é **usuário + senha** (sem e-mail): o usuário é o nome do
+integrante em minúsculas e sem acentos, e a senha inicial é o telefone dele
+(9 dígitos) — que ele pode trocar quando quiser, no próprio backstage.
+
+1. Em **Authentication → Sign In / Up**: desative **"Allow new users to sign up"**
+   e mantenha o provedor **Email** ativado (é ele que valida a senha).
+2. No **SQL Editor**, crie cada integrante (nome e telefone com 9 dígitos):
+
+   ```sql
+   select public.admin_create_member('Cláudio', '999999999');
+   -- retorna o usuário criado (ex.: "claudio")
+   -- opcional: 3º parâmetro = instrumento, 4º = usuário explícito
+   -- select public.admin_create_member('João Silva', '988887777', 'baixo', 'joao');
+   ```
+
 3. Para se tornar admin: **Table Editor → members**, edite a sua linha e marque
    `is_admin = true`.
-4. Em **Authentication → URL Configuration**: em **Site URL** coloque
-   `https://www.thejames.com.br` e adicione em **Redirect URLs**:
-   `https://www.thejames.com.br/**` e `https://comunelo.github.io/**`
-   (para o magic link funcionar antes e depois do domínio).
+4. Se alguém esquecer a senha, o admin redefine no SQL Editor:
+   `select public.admin_set_password('claudio', 'novasenha');`
+
+> Banco criado com o `schema.sql` antigo (era do magic link)? Rode uma vez o
+> [`supabase/migracao-login-senha.sql`](supabase/migracao-login-senha.sql) —
+> as instruções estão no topo do arquivo. SMTP e templates de e-mail não são
+> mais usados.
 
 ### 3. Apontar o site para o Supabase
 
@@ -60,8 +73,10 @@ Custo mensal: **R$ 0**.
 ## Dia a dia
 
 - **Publicar mudanças no site**: `git push` (Pages atualiza em ~1 min).
-- **Backstage**: `www.thejames.com.br/banda/` → digite o e-mail → clique no
-  link recebido.
+- **Backstage**: `www.thejames.com.br/banda/` → usuário (nome em minúsculas,
+  sem acentos) + senha (a inicial é o telefone, 9 dígitos). Troca de senha é
+  opcional, na própria página; senha esquecida → admin roda
+  `admin_set_password` no SQL Editor.
 - **Fluxo das músicas novas**: qualquer integrante sugere em **Candidatas** →
   alguém abre uma **Votação** (X vagas + prazo) → cada um dá seus X votos
   (ocultos até o fim) → ao encerrar, as mais votadas entram sozinhas no
@@ -81,4 +96,5 @@ js/config.js          URL e anon key do Supabase  ← único arquivo a configura
 js/db.js              cliente + helpers compartilhados
 js/*.js               um módulo por página
 supabase/schema.sql   tabelas, regras de segurança e funções de votação
+supabase/migracao-login-senha.sql   migração p/ bancos criados na era do magic link
 ```
