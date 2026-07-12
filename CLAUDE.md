@@ -19,6 +19,15 @@ Setup completo e passos pendentes: ver README.md.
   `migracao-login-senha.sql`, `seed-repertorio.sql`, `update-spotify.sql`
   (os três últimos já rodados no banco de produção em 12/07/2026).
 
+- Ferramentas do backstage com mais de um contexto usam abas (`.tabs`/`.tab`,
+  ver Votações e Shows); tabelas têm cabeçalhos ordenáveis (`th.sortable`).
+- Em módulos ES com `await` no topo: a carga inicial fica no FIM do arquivo
+  (chamar antes das declarações `let` dá erro de TDZ — já quebrou a página
+  de votações uma vez).
+- Páginas do backstage são testáveis sem credenciais: sessão falsa no
+  localStorage (`sb-<ref>-auth-token`) + Playwright interceptando
+  `lpadlajkeqepdabitgvp.supabase.co` com um mock em memória.
+
 ## Cuidados neste ambiente
 - `git push` pode falhar com erro HTTP2 → usar `git -c http.version=HTTP/1.1 push`.
 - `js/config.js` contém a anon key do Supabase — pública por design, não é segredo.
