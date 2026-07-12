@@ -3,9 +3,20 @@ import { db, requireAuth, el, show, fmtDate, spotifyAnchor } from "./db.js";
 
 const $ = (id) => document.getElementById(id);
 let candidates = [];
+let sortBy = null;   // null = mais recentes primeiro (ordem do banco)
+let sortDir = 1;
 
 const { session } = await requireAuth();
 await load();
+
+for (const th of document.querySelectorAll("th.sortable")) {
+  th.addEventListener("click", () => {
+    const field = th.dataset.field;
+    if (sortBy === field) sortDir = -sortDir;
+    else { sortBy = field; sortDir = 1; }
+    render();
+  });
+}
 
 $("add-form").addEventListener("submit", async (e) => {
   e.preventDefault();
@@ -33,12 +44,25 @@ async function load() {
   render();
 }
 
+const sortKey = (c) =>
+  sortBy === "suggester" ? (c.suggester?.name ?? "") : (c[sortBy] ?? "");
+
 function render() {
   const f = $("filter").value;
   const list = candidates.filter((c) =>
     f === "todas" ? true :
     f === "ativas" ? (c.status === "sugerida" || c.status === "em_votacao") :
     c.status === f);
+
+  if (sortBy) {
+    list.sort((a, b) =>
+      sortDir * sortKey(a).localeCompare(sortKey(b), "pt-BR", { sensitivity: "base" })
+      || a.title.localeCompare(b.title, "pt-BR", { sensitivity: "base" }));
+  }
+  for (const th of document.querySelectorAll("th.sortable")) {
+    th.querySelector(".dir").textContent =
+      th.dataset.field === sortBy ? (sortDir === 1 ? " ▲" : " ▼") : "";
+  }
 
   $("rows").replaceChildren(...list.map((c) =>
     el("tr", {},
