@@ -4,7 +4,8 @@
 import { db, requireAuth, el, show, fmtDateTime, spotifyAnchor } from "./db.js";
 
 const $ = (id) => document.getElementById(id);
-const { session } = await requireAuth();
+const { session, member } = await requireAuth();
+const isAdmin = member?.is_admin === true;
 
 // ---------- abas ----------
 const TABS = ["open", "new", "closed"];
@@ -164,9 +165,10 @@ async function openCard(poll) {
     local.size !== mine.size || [...local].some((id) => !mine.has(id));
 
   function drawTable() {
-    const list = [...cands];
+    const chosen = cands.filter((c) => local.has(c.id));
+    const rest = cands.filter((c) => !local.has(c.id));
     if (sort.by) {
-      list.sort((a, b) =>
+      rest.sort((a, b) =>
         sort.dir * a[sort.by].localeCompare(b[sort.by], "pt-BR", { sensitivity: "base" })
         || a.title.localeCompare(b.title, "pt-BR", { sensitivity: "base" }));
     }
@@ -180,30 +182,50 @@ async function openCard(poll) {
     }, label, el("span", { class: "dir" },
       sort.by === field ? (sort.dir === 1 ? " ▲" : " ▼") : ""));
 
-    tableBox.replaceChildren(el("div", { class: "tblwrap" }, el("table", {},
-      el("thead", {}, el("tr", {},
-        el("th", { class: "checkth" }),
-        sortTh("title", "Música"),
-        sortTh("artist", "Artista"),
-        el("th", {}, "Spotify"))),
-      el("tbody", {}, ...list.map((c) => {
-        const cb = el("input", {
-          type: "checkbox", id: `v-${poll.id}-${c.id}`,
-          onchange: (e) => {
-            e.target.checked ? local.add(c.id) : local.delete(c.id);
-            drawTable();
-          },
-        });
-        cb.checked = local.has(c.id);
-        if (!local.has(c.id) && local.size >= poll.num_winners) cb.disabled = true;
-        return el("tr", {},
-          el("td", {}, cb),
-          el("td", {}, el("label", { for: cb.id, style: "font-size:15px;color:var(--ink);cursor:pointer" },
-            el("b", {}, c.title))),
-          el("td", {}, c.artist),
-          el("td", {}, spotifyAnchor(c.spotify_url)));
-      })),
-    )));
+    // grupo dos meus votos: as escolhidas saem da lista e sobem para cá
+    const myvotes = el("div", { class: "myvotes" },
+      el("h4", {}, "Meus votos",
+        el("span", { class: "mono muted", style: "margin-left:10px" },
+          `${local.size} de ${poll.num_winners}`)),
+      chosen.length
+        ? el("div", {}, ...chosen.map((c) => el("div", { class: "cand" },
+            el("button", {
+              class: "iconbtn", title: "Remover este voto",
+              onclick: () => { local.delete(c.id); drawTable(); },
+            }, "✕"),
+            el("span", {}, el("b", {}, c.title), ` — ${c.artist}`),
+            c.spotify_url
+              ? el("a", { class: "spotify", href: c.spotify_url, target: "_blank",
+                          rel: "noopener", style: "margin-left:auto" }, "▶")
+              : null)))
+        : el("p", { class: "empty", style: "padding:6px 0" },
+            "Nenhuma música selecionada ainda — marque na lista abaixo."),
+    );
+
+    const table = rest.length
+      ? el("div", { class: "tblwrap" }, el("table", {},
+          el("thead", {}, el("tr", {},
+            el("th", { class: "checkth" }),
+            sortTh("title", "Música"),
+            sortTh("artist", "Artista"),
+            el("th", {}, "Spotify"))),
+          el("tbody", {}, ...rest.map((c) => {
+            const cb = el("input", {
+              type: "checkbox", id: `v-${poll.id}-${c.id}`,
+              disabled: local.size >= poll.num_winners ? "" : null,
+              onchange: () => { local.add(c.id); drawTable(); },
+            });
+            return el("tr", {},
+              el("td", {}, cb),
+              el("td", {}, el("label", { for: cb.id, style: "font-size:15px;color:var(--ink);cursor:pointer" },
+                el("b", {}, c.title))),
+              el("td", {}, c.artist),
+              el("td", {}, spotifyAnchor(c.spotify_url)));
+          })),
+        ))
+      : el("p", { class: "empty" }, "Todas as candidatas estão nos seus votos.");
+
+    tableBox.replaceChildren(myvotes, table);
     drawFoot();
   }
 
@@ -245,8 +267,6 @@ async function openCard(poll) {
     el("span", { class: "tag" + (m.votes_used > 0 ? " voted" : "") },
       `${m.name} ${m.votes_used > 0 ? "✔" : "…"}`)));
 
-  const canClose = poll.created_by === session.user.id || new Date() >= new Date(poll.deadline);
-
   drawTable();
 
   return el("div", { class: "card pollcard" },
@@ -255,15 +275,14 @@ async function openCard(poll) {
     el("p", { class: "muted", style: "margin:4px 0 10px" },
       `${poll.num_winners} vaga(s) · prazo ${fmtDateTime(poll.deadline)} · votos ocultos até encerrar`),
     tableBox, footBox, voters,
-    el("div", { class: "form-row", style: "margin-top:14px;align-items:center" },
-      el("button", {
-        class: "btn small" + (canClose ? " danger" : " ghost"),
-        onclick: () => closePoll(poll),
-        title: canClose ? "" : "Antes do prazo, só quem criou pode encerrar",
-      }, "Encerrar votação e apurar"),
-      el("span", { class: "muted", style: "font-size:13px" },
-        "Encerra para todos e promove as vencedoras ao repertório."),
-    ),
+    // encerrar/apurar: só o administrador vê (e o banco também só aceita admin)
+    isAdmin
+      ? el("div", { class: "form-row", style: "margin-top:14px;align-items:center" },
+          el("button", { class: "btn small danger", onclick: () => closePoll(poll) },
+            "Encerrar votação e apurar"),
+          el("span", { class: "muted", style: "font-size:13px" },
+            "Encerra para todos e promove as vencedoras ao repertório."))
+      : null,
   );
 }
 

@@ -287,11 +287,9 @@ begin
   if v_poll is null then raise exception 'Votação não encontrada.'; end if;
   if v_poll.status <> 'aberta' then raise exception 'Esta votação já foi encerrada.'; end if;
 
-  -- Antes do prazo, só quem criou (ou admin) pode encerrar.
-  if now() < v_poll.deadline
-     and v_poll.created_by <> auth.uid()
-     and not exists (select 1 from public.members where id = auth.uid() and is_admin) then
-    raise exception 'Antes do prazo, só quem criou a votação pode encerrá-la.';
+  -- Só o administrador pode encerrar e apurar.
+  if not exists (select 1 from public.members where id = auth.uid() and is_admin) then
+    raise exception 'Só o administrador pode encerrar a votação.';
   end if;
 
   with tally as (
