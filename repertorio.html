@@ -34,7 +34,11 @@
 
     <div class="tblwrap">
       <table>
-        <thead><tr><th>Música</th><th>Artista</th><th>Ouvir</th></tr></thead>
+        <thead><tr>
+          <th class="sortable" data-field="title" title="Ordenar por música">Música<span class="dir"></span></th>
+          <th class="sortable" data-field="artist" title="Ordenar por artista">Artista<span class="dir"></span></th>
+          <th>Ouvir</th>
+        </tr></thead>
         <tbody id="rows"></tbody>
       </table>
     </div>

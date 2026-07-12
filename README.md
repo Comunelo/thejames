@@ -108,4 +108,5 @@ supabase/migracao-login-senha.sql   migração p/ bancos criados na era do magic
 supabase/seed-repertorio.sql        carga inicial do repertório (setlist de 26/06)
 supabase/update-spotify.sql         links do Spotify do repertório
 supabase/insert-musicas-faltantes.sql  músicas das setlists antigas (completa as 31)
+supabase/seed-candidatas.sql        28 candidatas da planilha p/ a próxima votação
 ```

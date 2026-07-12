@@ -218,6 +218,10 @@ th {
 }
 tr:last-child td { border-bottom: none; }
 
+th.sortable { cursor: pointer; user-select: none; white-space: nowrap; }
+th.sortable:hover { color: var(--accent); }
+th.sortable .dir { color: var(--accent); }
+
 .tag {
   display: inline-block; font-family: var(--font-mono); font-size: 11px;
   letter-spacing: 0.08em; border-radius: 3px; padding: 2px 10px;
