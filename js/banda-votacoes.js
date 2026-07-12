@@ -5,10 +5,26 @@ import { db, requireAuth, el, show, fmtDateTime, spotifyAnchor } from "./db.js";
 
 const $ = (id) => document.getElementById(id);
 const { session } = await requireAuth();
-await refresh();
+
+// ---------- abas ----------
+const TABS = ["open", "new", "closed"];
+let currentTab = null;
+
+function showTab(name) {
+  currentTab = name;
+  for (const t of TABS) {
+    $("tab-" + t).hidden = t !== name;
+    $("tab-btn-" + t).classList.toggle("active", t === name);
+  }
+}
+for (const t of TABS) $("tab-btn-" + t).addEventListener("click", () => showTab(t));
 
 async function refresh() {
-  await Promise.all([renderOpen(), renderPicker(), renderClosed()]);
+  const [nOpen, , nClosed] =
+    await Promise.all([renderOpen(), renderPicker(), renderClosed()]);
+  $("count-open").textContent = nOpen;
+  $("count-closed").textContent = nClosed;
+  if (!currentTab) showTab(nOpen > 0 ? "open" : "new");
 }
 
 // ---------- criar votação: seletor de candidatas ----------
@@ -109,6 +125,7 @@ $("poll-form").addEventListener("submit", async (e) => {
   picked.clear();
   show($("msg"), "Votação aberta! Avise a banda.", "ok");
   await refresh();
+  showTab("open");
 });
 
 // ---------- votações abertas ----------
@@ -119,10 +136,14 @@ async function renderOpen() {
     .eq("status", "aberta").order("created_at", { ascending: false });
   const box = $("open-list");
   if (!polls?.length) {
-    box.replaceChildren(el("p", { class: "empty" }, "Nenhuma votação aberta."));
-    return;
+    box.replaceChildren(el("p", { class: "empty" },
+      "Nenhuma votação aberta no momento. ",
+      el("a", { href: "#", onclick: (e) => { e.preventDefault(); showTab("new"); } },
+        "Abrir uma nova votação")));
+    return 0;
   }
   box.replaceChildren(...await Promise.all(polls.map(openCard)));
+  return polls.length;
 }
 
 async function openCard(poll) {
@@ -240,9 +261,10 @@ async function renderClosed() {
   const box = $("closed-list");
   if (!polls?.length) {
     box.replaceChildren(el("p", { class: "empty" }, "Nenhuma votação encerrada ainda."));
-    return;
+    return 0;
   }
   box.replaceChildren(...await Promise.all(polls.map(closedCard)));
+  return polls.length;
 }
 
 async function closedCard(poll) {
@@ -274,3 +296,6 @@ async function closedCard(poll) {
     ...rows,
   );
 }
+
+// Carrega tudo (fica no fim do módulo: todo o estado acima já foi inicializado).
+await refresh();

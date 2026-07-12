@@ -27,10 +27,19 @@
       encerramento; as mais votadas entram automaticamente no repertório.</p>
     <div id="msg" class="notice" hidden></div>
 
-    <section id="open-polls"><h2>Abertas</h2><div id="open-list"></div></section>
+    <div class="tabs" role="tablist">
+      <button type="button" class="tab" id="tab-btn-open" role="tab">
+        Abertas <span class="tabcount" id="count-open">0</span></button>
+      <button type="button" class="tab" id="tab-btn-new" role="tab">Nova votação</button>
+      <button type="button" class="tab" id="tab-btn-closed" role="tab">
+        Encerradas <span class="tabcount" id="count-closed">0</span></button>
+    </div>
 
-    <section id="new-poll">
-      <h2>Nova votação</h2>
+    <section id="tab-open" hidden>
+      <div id="open-list"></div>
+    </section>
+
+    <section id="tab-new" hidden>
       <form id="poll-form">
         <div class="form-row">
           <div class="field grow"><label for="p-title">Título</label>
@@ -41,11 +50,15 @@
             <input id="p-deadline" type="datetime-local" required></div>
         </div>
         <div id="cand-picker"></div>
-        <button class="btn" type="submit">Abrir votação</button>
+        <div class="form-row">
+          <button class="btn" type="submit">Abrir votação</button>
+        </div>
       </form>
     </section>
 
-    <section id="closed-polls"><h2>Encerradas</h2><div id="closed-list"></div></section>
+    <section id="tab-closed" hidden>
+      <div id="closed-list"></div>
+    </section>
   </div>
   <script type="module" src="../js/banda-votacoes.js"></script>
 </body>
