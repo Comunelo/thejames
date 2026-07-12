@@ -18,6 +18,7 @@
     <a href="shows.html">Shows</a>
     <a href="candidatas.html">Candidatas</a>
     <a href="votacoes.html">Votações</a>
+    <a href="perfil.html">Perfil</a>
     <a class="backlink" href="../index.html">&larr; Site p&uacute;blico</a>
   </nav>
   <div class="wrap">
@@ -48,6 +49,19 @@
         <span class="who">Olá, <b id="who"></b> · <a href="#" id="logout">sair</a></span>
       </div>
 
+      <div class="statrow">
+        <div class="stat">
+          <b id="st-songs">—</b><span>músicas no repertório</span>
+        </div>
+        <div class="stat">
+          <b id="st-next">—</b><span>próximo show</span>
+        </div>
+        <div class="stat">
+          <b id="st-polls">—</b><span>votações abertas</span>
+        </div>
+      </div>
+
+      <h2>Ferramentas</h2>
       <div class="menu-grid">
         <a class="card" href="repertorio.html">
           <h3>Repertório</h3><p>As músicas que a banda toca</p>
@@ -61,34 +75,10 @@
         <a class="card" href="votacoes.html">
           <h3>Votações</h3><p>Escolha as próximas do repertório</p>
         </a>
+        <a class="card" href="perfil.html">
+          <h3>Meu perfil</h3><p>Nome, instrumento e troca de senha</p>
+        </a>
       </div>
-
-      <h2>Meu perfil</h2>
-      <p class="muted">Usuário de acesso: <b id="p-user"></b> (não muda)</p>
-      <form id="profile-form" class="form-row">
-        <div class="field grow">
-          <label for="p-name">Nome</label>
-          <input id="p-name" required>
-        </div>
-        <div class="field grow">
-          <label for="p-instrument">Instrumento</label>
-          <input id="p-instrument" placeholder="guitarra, voz, bateria…">
-        </div>
-        <button class="btn ghost" type="submit">Salvar</button>
-      </form>
-      <div id="profile-msg" class="notice" hidden></div>
-
-      <h2>Trocar senha</h2>
-      <p class="muted">Opcional. Se esquecer a senha, peça ao admin para redefinir.</p>
-      <form id="password-form" class="form-row">
-        <div class="field grow">
-          <label for="new-password">Nova senha (mín. 6 caracteres)</label>
-          <input type="password" id="new-password" minlength="6" required
-                 autocomplete="new-password">
-        </div>
-        <button class="btn ghost" type="submit">Alterar</button>
-      </form>
-      <div id="password-msg" class="notice" hidden></div>
     </section>
 
   </div>

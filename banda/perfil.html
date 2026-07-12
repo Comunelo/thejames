@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Meu perfil · Backstage · The James</title>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow:wght@400;500;600&family=Space+Mono&display=swap">
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body class="banda">
+  <div class="stripes"></div>
+  <nav class="site">
+    <a class="logo" href="index.html"><span>The</span> James</a>
+    <span class="badge">Backstage</span>
+    <a href="repertorio.html">Repertório</a>
+    <a href="shows.html">Shows</a>
+    <a href="candidatas.html">Candidatas</a>
+    <a href="votacoes.html">Votações</a>
+    <a href="perfil.html" class="active">Perfil</a>
+    <a class="backlink" href="../index.html">&larr; Site p&uacute;blico</a>
+  </nav>
+  <div class="wrap">
+
+    <div class="banda-header">
+      <h1>Meu perfil</h1>
+      <span class="who">Usuário: <b id="p-user"></b></span>
+    </div>
+
+    <h2>Dados</h2>
+    <p class="muted">O nome aparece para os outros integrantes e nas votações.
+      O usuário de acesso não muda.</p>
+    <form id="profile-form" class="form-row">
+      <div class="field grow">
+        <label for="p-name">Nome</label>
+        <input id="p-name" required>
+      </div>
+      <div class="field grow">
+        <label for="p-instrument">Instrumento</label>
+        <input id="p-instrument" placeholder="guitarra, voz, bateria…">
+      </div>
+      <button class="btn ghost" type="submit">Salvar</button>
+    </form>
+    <div id="profile-msg" class="notice" hidden></div>
+
+    <h2>Trocar senha</h2>
+    <p class="muted">Opcional. Se esquecer a senha, peça ao admin para redefinir.</p>
+    <form id="password-form" class="form-row">
+      <div class="field grow">
+        <label for="new-password">Nova senha (mín. 6 caracteres)</label>
+        <input type="password" id="new-password" minlength="6" required
+               autocomplete="new-password">
+      </div>
+      <button class="btn ghost" type="submit">Alterar</button>
+    </form>
+    <div id="password-msg" class="notice" hidden></div>
+
+  </div>
+  <script type="module" src="../js/banda-perfil.js"></script>
+</body>
+</html>

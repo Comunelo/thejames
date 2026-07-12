@@ -90,22 +90,25 @@ nav.site:has(.badge) .logo { margin-right: 0; }
 nav.site a.backlink { font-size: 13px; color: var(--muted); }
 nav.site a.backlink:hover { color: var(--ink); }
 
-/* ---------- hero-cartaz (home pública) ---------- */
-.poster {
-  display: flex; flex-direction: column; justify-content: space-between;
-  min-height: clamp(480px, 78vh, 720px);
-  background:
-    linear-gradient(180deg, var(--red) 0%, var(--red) 14%, rgba(175, 7, 42, 0) 46%),
-    linear-gradient(180deg, rgba(14, 8, 18, 0) 52%, rgba(14, 8, 18, 0.55) 78%, var(--bg) 100%),
-    url("../media/hero.jpg") center 62% / cover no-repeat #14060F;
-}
-.poster > .inner { width: 100%; max-width: 900px; margin: 0 auto; padding: 26px 20px; }
-.poster h1 {
-  font-size: clamp(64px, 15vw, 168px); line-height: 0.95;
+/* ---------- hero-cartaz (home pública) ----------
+   Como no cartaz de verdade: título inteiro no bloco carmim, foto embaixo
+   (o vermelho sangra só sobre o teto/luzes, nunca sobre os rostos). */
+.poster .inner { width: 100%; max-width: 900px; margin: 0 auto; padding: 0 20px; }
+.poster-top { background: var(--red); padding: 22px 0 10px; }
+.poster-top h1 {
+  font-size: clamp(60px, 13vw, 148px); line-height: 0.95;
   margin: 4px 0 0; color: #FFFFFF;
-  text-shadow: 0 4px 30px rgba(14, 8, 18, 0.45);
 }
-.poster .kicker { color: #FFD9DF; }
+.poster-top .kicker { color: #FFD9DF; }
+.poster-photo {
+  display: flex; align-items: flex-end;
+  min-height: clamp(340px, 52vh, 480px);
+  background:
+    linear-gradient(180deg, var(--red) 0%, rgba(175, 7, 42, 0) 18%),
+    linear-gradient(180deg, rgba(14, 8, 18, 0) 55%, rgba(14, 8, 18, 0.6) 80%, var(--bg) 100%),
+    url("../media/hero.jpg") center 32% / cover no-repeat #14060F;
+}
+.poster-photo .inner { padding-top: 26px; padding-bottom: 26px; }
 .poster .lede {
   font-size: clamp(17px, 2.2vw, 20px); color: var(--ink); max-width: 46ch;
   margin: 0 0 16px; text-shadow: 0 1px 12px rgba(14, 8, 18, 0.9);
@@ -248,6 +251,24 @@ tr:last-child td { border-bottom: none; }
 .banda-header { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; margin: 26px 0 6px; }
 .banda-header h1 { font-size: 32px; margin: 0; }
 .banda-header .who { margin-left: auto; color: var(--muted); font-size: 14px; }
+
+.statrow {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 14px; margin: 18px 0 6px;
+}
+.stat {
+  background: var(--bg-raised); border: 1px solid var(--line);
+  border-radius: 10px; padding: 14px 18px;
+}
+.stat b {
+  display: block; font-family: var(--font-display); font-weight: 400;
+  font-size: 26px; line-height: 1.15; color: var(--accent);
+  text-transform: uppercase; letter-spacing: 0.02em;
+}
+.stat span {
+  font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--muted);
+}
 
 .menu-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; margin: 20px 0; }
 .menu-grid a.card { display: block; text-decoration: none; color: var(--ink); }

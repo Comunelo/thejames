@@ -2,14 +2,14 @@
 // Ganhou cartaz novo? Salve o arquivo lá e acrescente uma linha aqui.
 import { el, fmtDate } from "./db.js";
 export const BANNERS = [
-  { date: "2026-11-14", venue: "Gravador Pub", city: "Porto Alegre",
-    note: "sexta · 20h", img: "media/banners_shows/2026_11_14_Gravador.jpg" },
   { date: "2026-06-26", venue: "Encouraçado Butikin", city: "Porto Alegre",
     img: "media/banners_shows/2026_06_26_Encouracado.jpg" },
   { date: "2026-04-30", venue: "Gravador Pub", city: "Porto Alegre",
     img: "media/banners_shows/2026_04_30_Gravador.jpg" },
   { date: "2025-12-19", venue: "Encouraçado Butikin", city: "Porto Alegre",
     img: "media/banners_shows/2025_12_19_Encouracado.jpg" },
+  { date: "2025-11-14", venue: "Gravador Pub", city: "Porto Alegre",
+    img: "media/banners_shows/2025_11_14_Gravador.jpg" },
 ];
 
 // Hoje no fuso local, em YYYY-MM-DD (comparável com as datas acima e do banco).

@@ -48,6 +48,10 @@ integrante em minúsculas e sem acentos, e a senha inicial é o telefone dele
 > as instruções estão no topo do arquivo. SMTP e templates de e-mail não são
 > mais usados.
 
+5. Para carregar o repertório inicial (as 25 músicas da setlist de 26/06) e
+   registrar os shows já feitos: rode
+   [`supabase/seed-repertorio.sql`](supabase/seed-repertorio.sql) no SQL Editor.
+
 ### 3. Apontar o site para o Supabase
 
 1. No painel: **Project Settings → API** — copie a **Project URL** e a
@@ -90,7 +94,7 @@ integrante em minúsculas e sem acentos, e a senha inicial é o telefone dele
 index.html            home pública (hero com foto de show + seção sobre a banda)
 repertorio.html       repertório público (só músicas ativas)
 shows.html            agenda pública (próximos + cartazes dos anteriores)
-banda/                backstage (login + 4 ferramentas)
+banda/                backstage (login, dashboard, 4 ferramentas e perfil)
 media/                foto do hero e cartazes dos shows (banners_shows/)
 js/shows-data.js      manifesto dos cartazes + helpers de exibição de shows
 css/style.css         identidade visual (cores do cartaz: carmim/violeta)
@@ -99,4 +103,5 @@ js/db.js              cliente + helpers compartilhados
 js/*.js               um módulo por página
 supabase/schema.sql   tabelas, regras de segurança e funções de votação
 supabase/migracao-login-senha.sql   migração p/ bancos criados na era do magic link
+supabase/seed-repertorio.sql        carga inicial do repertório (setlist de 26/06)
 ```
