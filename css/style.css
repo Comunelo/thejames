@@ -160,14 +160,15 @@ nav.site a.backlink:hover { background: #AF072A; color: #FFFFFF; }
 .poster-photo .inner { padding-top: 26px; padding-bottom: 26px; }
 
 /* celular: mostra a foto inteira (sem cortar os músicos das pontas);
-   a foto tem proporção 1920x816 → altura = 42.5% da largura da tela */
+   a foto (editada: guitarrista aproximado da cantora) tem proporção
+   1785x816 → altura = 45.7% da largura da tela */
 @media (max-width: 640px) {
   .poster-photo {
     min-height: 0;
-    padding-top: 40vw;
+    padding-top: 43vw;
     background:
       linear-gradient(180deg, var(--red) 0, rgba(175, 7, 42, 0) 6vw),
-      linear-gradient(180deg, rgba(14, 8, 18, 0) 32vw, var(--bg) 42.5vw),
+      linear-gradient(180deg, rgba(14, 8, 18, 0) 35vw, var(--bg) 45.7vw),
       url("../media/hero.jpg") center top / 100% auto no-repeat,
       var(--bg);
   }
