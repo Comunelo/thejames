@@ -1,5 +1,5 @@
 // Backstage: login por usuário + senha e dashboard com resumo da banda.
-import { db, configured, logout, show, fmtDate } from "./db.js";
+import { db, configured, logout, show, fmtDate, avatarEl } from "./db.js";
 
 const $ = (id) => document.getElementById(id);
 
@@ -56,7 +56,10 @@ async function renderDash(session) {
     db.from("polls").select("id", { count: "exact", head: true }).eq("status", "aberta"),
   ]);
 
-  $("who").textContent = member.data?.name ?? session.user.email.split("@")[0];
+  const username = session.user.email.split("@")[0];
+  const name = member.data?.name ?? username;
+  $("who").textContent = name;
+  document.querySelector("#dash .who").prepend(avatarEl(username, name));
   $("st-songs").textContent = songs.count ?? "—";
   $("st-polls").textContent = polls.count ?? "—";
   $("st-next").textContent = nextShow.data

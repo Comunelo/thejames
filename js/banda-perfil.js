@@ -1,10 +1,13 @@
 // Backstage · Meu perfil: dados do integrante e troca de senha.
-import { db, requireAuth, show } from "./db.js";
+import { db, requireAuth, show, avatarEl } from "./db.js";
 
 const $ = (id) => document.getElementById(id);
 const { session, member } = await requireAuth();
 
-$("p-user").textContent = member?.username ?? session.user.email.split("@")[0];
+const username = member?.username ?? session.user.email.split("@")[0];
+$("p-user").textContent = username;
+document.querySelector(".banda-header .who")
+  .prepend(avatarEl(username, member?.name, "lg"));
 $("p-name").value = member?.name ?? "";
 $("p-instrument").value = member?.instrument ?? "";
 

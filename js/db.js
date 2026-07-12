@@ -46,6 +46,22 @@ export function el(tag, attrs = {}, ...children) {
   return node;
 }
 
+// Foto do integrante (media/avatars/<usuario>.jpg, caminho relativo às
+// páginas de banda/); quem não tem foto cai na inicial do nome.
+export function avatarEl(username, name, extraClass = "") {
+  const cls = ("avatar " + extraClass).trim();
+  const img = el("img", {
+    class: cls,
+    src: `../media/avatars/${username}.jpg`,
+    alt: "Foto de " + (name || username),
+  });
+  img.addEventListener("error", () => {
+    img.replaceWith(el("span", { class: cls + " avatar-fallback" },
+      (name || username || "?").trim().charAt(0).toUpperCase()));
+  });
+  return img;
+}
+
 export function show(node, message, kind = "") {
   node.className = "notice " + kind;
   node.textContent = message;

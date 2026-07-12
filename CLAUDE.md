@@ -14,7 +14,9 @@ Setup completo e passos pendentes: ver README.md.
 - Cartazes de shows ficam em `media/banners_shows/` e são listados no manifesto
   `js/shows-data.js` (cartaz novo = salvar arquivo + acrescentar linha lá).
   Fotos profissionais em `media/photos/`; hero e faixas p&b derivados delas
-  em `media/*.jpg`.
+  em `media/*.jpg`. Foto de cada integrante em `media/avatars/<usuario>.jpg`
+  (usuário = slug do login); o backstage a mostra no dashboard e no perfil
+  via `avatarEl` (`js/db.js`), com a inicial do nome como fallback.
 - Scripts SQL que o admin roda no SQL Editor: `schema.sql` (instalação),
   `migracao-login-senha.sql`, `seed-repertorio.sql`, `update-spotify.sql`
   (os três últimos já rodados no banco de produção em 12/07/2026).
