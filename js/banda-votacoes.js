@@ -1,7 +1,7 @@
 // Backstage: votações (feature D).
 // Regras: X votos por integrante (1 por música), votos ocultos até encerrar,
 // top X promovidas ao repertório; empate na última vaga → quem encerra escolhe.
-import { db, requireAuth, el, show, fmtDateTime } from "./db.js";
+import { db, requireAuth, el, show, fmtDateTime, spotifyAnchor } from "./db.js";
 
 const $ = (id) => document.getElementById(id);
 const { session } = await requireAuth();
@@ -11,30 +11,89 @@ async function refresh() {
   await Promise.all([renderOpen(), renderPicker(), renderClosed()]);
 }
 
-// ---------- criar votação ----------
+// ---------- criar votação: seletor de candidatas ----------
+
+let pickerCands = [];
+let pickSort = { by: null, dir: 1 };   // null = ordem de sugestão (mais antigas primeiro)
+const picked = new Set();
 
 async function renderPicker() {
   const { data: cands } = await db.from("candidates")
     .select("*").eq("status", "sugerida").order("created_at");
+  pickerCands = cands ?? [];
+  const valid = new Set(pickerCands.map((c) => c.id));
+  for (const id of [...picked]) if (!valid.has(id)) picked.delete(id);
+  drawPicker();
+}
+
+function drawPicker() {
   const box = $("cand-picker");
-  if (!cands?.length) {
+  if (!pickerCands.length) {
     box.replaceChildren(el("p", { class: "empty" },
       "Nenhuma candidata sugerida — adicione músicas em Candidatas primeiro."));
     return;
   }
+
+  const list = [...pickerCands];
+  if (pickSort.by) {
+    list.sort((a, b) =>
+      pickSort.dir * a[pickSort.by].localeCompare(b[pickSort.by], "pt-BR", { sensitivity: "base" })
+      || a.title.localeCompare(b.title, "pt-BR", { sensitivity: "base" }));
+  }
+
+  const master = el("input", {
+    type: "checkbox", title: "Marcar/desmarcar todas",
+    onchange: (e) => {
+      if (e.target.checked) pickerCands.forEach((c) => picked.add(c.id));
+      else picked.clear();
+      drawPicker();
+    },
+  });
+  master.checked = picked.size === pickerCands.length;
+  master.indeterminate = picked.size > 0 && picked.size < pickerCands.length;
+
+  const sortTh = (field, label) => el("th", {
+    class: "sortable", title: `Ordenar por ${label.toLowerCase()}`,
+    onclick: () => {
+      if (pickSort.by === field) pickSort.dir = -pickSort.dir;
+      else pickSort = { by: field, dir: 1 };
+      drawPicker();
+    },
+  }, label, el("span", { class: "dir" },
+    pickSort.by === field ? (pickSort.dir === 1 ? " ▲" : " ▼") : ""));
+
   box.replaceChildren(
-    el("label", {}, "Candidatas na votação:"),
-    ...cands.map((c) => el("div", { class: "cand" },
-      el("input", { type: "checkbox", id: "pick-" + c.id, value: c.id }),
-      el("label", { for: "pick-" + c.id, style: "font-size:15px;color:var(--ink)" },
-        el("b", {}, c.title), ` — ${c.artist}`),
+    el("label", {}, "Candidatas na votação ",
+      el("span", { class: "mono muted" }, `(${picked.size} de ${pickerCands.length} selecionadas)`)),
+    el("div", { class: "tblwrap" }, el("table", {},
+      el("thead", {}, el("tr", {},
+        el("th", { class: "checkth" }, master),
+        sortTh("title", "Música"),
+        sortTh("artist", "Artista"),
+        el("th", {}, "Spotify"))),
+      el("tbody", {}, ...list.map((c) => {
+        const cb = el("input", {
+          type: "checkbox", id: "pick-" + c.id,
+          onchange: (e) => {
+            e.target.checked ? picked.add(c.id) : picked.delete(c.id);
+            drawPicker();
+          },
+        });
+        cb.checked = picked.has(c.id);
+        return el("tr", {},
+          el("td", {}, cb),
+          el("td", {}, el("label", { for: cb.id, style: "font-size:15px;color:var(--ink);cursor:pointer" },
+            el("b", {}, c.title))),
+          el("td", {}, c.artist),
+          el("td", {}, spotifyAnchor(c.spotify_url)));
+      })),
     )),
   );
 }
 
 $("poll-form").addEventListener("submit", async (e) => {
   e.preventDefault();
-  const ids = [...document.querySelectorAll("#cand-picker input:checked")].map((i) => i.value);
+  const ids = [...picked];
   const winners = parseInt($("p-winners").value, 10);
   if (ids.length <= winners) {
     return show($("msg"), "Escolha mais candidatas do que vagas — senão não há o que votar.", "error");
@@ -47,6 +106,7 @@ $("poll-form").addEventListener("submit", async (e) => {
   });
   if (error) return show($("msg"), "Erro ao criar votação: " + error.message, "error");
   e.target.reset();
+  picked.clear();
   show($("msg"), "Votação aberta! Avise a banda.", "ok");
   await refresh();
 });

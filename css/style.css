@@ -221,6 +221,8 @@ tr:last-child td { border-bottom: none; }
 th.sortable { cursor: pointer; user-select: none; white-space: nowrap; }
 th.sortable:hover { color: var(--accent); }
 th.sortable .dir { color: var(--accent); }
+th.checkth { width: 40px; }
+input[type="checkbox"] { accent-color: var(--accent); }
 
 .tag {
   display: inline-block; font-family: var(--font-mono); font-size: 11px;
