@@ -156,6 +156,18 @@ nav.site a.backlink:hover { color: var(--ink); }
   text-transform: uppercase; color: var(--accent); margin: 0 0 10px;
 }
 
+/* fundos fotográficos p&b nas páginas internas (faixa no topo,
+   mesma régua do backstage: véu sólido antes da borda da foto em 39.5% da largura) */
+body.bg-repertorio { --photo-strip: url("../media/bg-repertorio.jpg"); }
+body.bg-shows { --photo-strip: url("../media/bg-shows.jpg"); }
+body.bg-repertorio, body.bg-shows {
+  background:
+    linear-gradient(180deg, rgba(14, 8, 18, 0.78) 0, rgba(14, 8, 18, 0.93) 24vw, #0E0812 38vw)
+      center top / 100% 42vw no-repeat,
+    var(--photo-strip) center top / 100% auto no-repeat,
+    var(--bg);
+}
+
 /* hero simples das páginas internas */
 .hero { padding: 48px 0 28px; }
 .hero p.lede { font-size: 18px; color: var(--muted); max-width: 56ch; }
