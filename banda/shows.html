@@ -23,17 +23,34 @@
   </nav>
   <div class="wrap">
     <div class="banda-header"><h1>Shows &amp; setlists</h1></div>
-
-    <h2 class="no-print">Novo show</h2>
-    <form id="add-form" class="form-row no-print">
-      <div class="field"><label for="f-date">Data</label><input id="f-date" type="date" required></div>
-      <div class="field grow"><label for="f-venue">Local</label><input id="f-venue" required placeholder="Bar do Zé"></div>
-      <div class="field grow"><label for="f-city">Cidade</label><input id="f-city" required></div>
-      <button class="btn" type="submit">Criar</button>
-    </form>
     <div id="msg" class="notice no-print" hidden></div>
 
-    <div id="show-list" class="no-print"></div>
+    <div class="tabs no-print" role="tablist">
+      <button type="button" class="tab" id="tab-btn-upcoming" role="tab">
+        Próximos <span class="tabcount" id="count-upcoming">0</span></button>
+      <button type="button" class="tab" id="tab-btn-new" role="tab">+ Novo show</button>
+      <button type="button" class="tab" id="tab-btn-past" role="tab">
+        Já tocamos <span class="tabcount" id="count-past">0</span></button>
+    </div>
+
+    <section id="tab-upcoming" class="no-print" hidden>
+      <div id="upcoming-list"></div>
+    </section>
+
+    <section id="tab-new" class="no-print" hidden>
+      <form id="add-form" class="form-row">
+        <div class="field"><label for="f-date">Data</label><input id="f-date" type="date" required></div>
+        <div class="field grow"><label for="f-venue">Local</label><input id="f-venue" required placeholder="Bar do Zé"></div>
+        <div class="field grow"><label for="f-city">Cidade</label><input id="f-city" required></div>
+        <button class="btn" type="submit">Criar show</button>
+      </form>
+      <p class="muted">Depois de criar, o editor abre aqui embaixo para montar a setlist
+        e divulgar o show na agenda pública.</p>
+    </section>
+
+    <section id="tab-past" class="no-print" hidden>
+      <div id="past-list"></div>
+    </section>
 
     <!-- Editor do show selecionado -->
     <section id="editor" hidden>

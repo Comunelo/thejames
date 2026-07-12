@@ -8,7 +8,19 @@ let setlist = [];     // [{position, song:{...}}]
 let repertoire = [];  // músicas ativas
 
 await requireAuth();
-await Promise.all([loadShows(), loadRepertoire()]);
+
+// ---------- abas ----------
+const TABS = ["upcoming", "new", "past"];
+let currentTab = null;
+
+function showTab(name) {
+  currentTab = name;
+  for (const t of TABS) {
+    $("tab-" + t).hidden = t !== name;
+    $("tab-btn-" + t).classList.toggle("active", t === name);
+  }
+}
+for (const t of TABS) $("tab-btn-" + t).addEventListener("click", () => showTab(t));
 
 $("add-form").addEventListener("submit", async (e) => {
   e.preventDefault();
@@ -20,6 +32,8 @@ $("add-form").addEventListener("submit", async (e) => {
   if (error) return show($("msg"), "Erro ao criar: " + error.message, "error");
   e.target.reset();
   await loadShows();
+  const today = new Date().toLocaleDateString("en-CA");
+  showTab(data.date >= today ? "upcoming" : "past");
   select(data.id);
 });
 
@@ -36,25 +50,40 @@ async function loadRepertoire() {
   repertoire = data ?? [];
 }
 
-function renderList() {
-  const box = $("show-list");
-  if (!shows.length) {
-    box.replaceChildren(el("p", { class: "empty" }, "Nenhum show cadastrado ainda."));
-    return;
-  }
-  box.replaceChildren(...shows.map((s) =>
-    el("div", { class: "card" },
-      el("div", { class: "form-row", style: "align-items:center" },
-        el("div", { class: "grow" },
-          el("b", {}, `${fmtDate(s.date)} — ${s.venue}`),
-          el("span", { class: "muted" }, ` · ${s.city}`),
-          s.is_public ? el("span", { class: "tag ativa", style: "margin-left:8px" }, "público") : null,
-        ),
-        el("button", { class: "btn small ghost", onclick: () => select(s.id) },
-          current?.id === s.id ? "Editando…" : "Abrir"),
+function showCard(s) {
+  return el("div", { class: "card" },
+    el("div", { class: "form-row", style: "align-items:center" },
+      el("div", { class: "grow" },
+        el("b", {}, `${fmtDate(s.date)} — ${s.venue}`),
+        el("span", { class: "muted" }, ` · ${s.city}`),
+        s.is_public ? el("span", { class: "tag ativa", style: "margin-left:8px" }, "público") : null,
+        s.setlist_public ? el("span", { class: "tag aberta", style: "margin-left:8px" }, "setlist pública") : null,
       ),
+      el("button", { class: "btn small" + (current?.id === s.id ? "" : " ghost"), onclick: () => select(s.id) },
+        current?.id === s.id ? "Editando…" : "Abrir"),
     ),
-  ));
+  );
+}
+
+function renderList() {
+  const today = new Date().toLocaleDateString("en-CA");
+  const upcoming = shows.filter((s) => s.date >= today).sort((a, b) => (a.date < b.date ? -1 : 1));
+  const past = shows.filter((s) => s.date < today);   // já vem do banco em ordem decrescente
+
+  $("count-upcoming").textContent = upcoming.length;
+  $("count-past").textContent = past.length;
+
+  $("upcoming-list").replaceChildren(...(upcoming.length
+    ? upcoming.map(showCard)
+    : [el("p", { class: "empty" }, "Nenhum show marcado. ",
+        el("a", { href: "#", onclick: (e) => { e.preventDefault(); showTab("new"); } },
+          "Criar um novo show"))]));
+
+  $("past-list").replaceChildren(...(past.length
+    ? past.map(showCard)
+    : [el("p", { class: "empty" }, "Nenhum show realizado ainda.")]));
+
+  if (!currentTab) showTab(upcoming.length > 0 ? "upcoming" : "new");
 }
 
 async function select(id) {
@@ -186,3 +215,6 @@ $("print").addEventListener("click", () => {
   );
   window.print();
 });
+
+// Carga inicial no fim do módulo (todo o estado acima já inicializado).
+await Promise.all([loadShows(), loadRepertoire()]);
