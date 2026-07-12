@@ -1,6 +1,6 @@
 # The James — site da banda
 
-Site do **The James** (covers de classic rock & yacht rock, anos 70/80).
+Site do **The James** (covers de classic rock e pop).
 
 - **Área pública**: home, repertório e agenda de shows.
 - **Backstage** (`/banda`, só integrantes): gestão do repertório, setlists de
@@ -87,11 +87,13 @@ integrante em minúsculas e sem acentos, e a senha inicial é o telefone dele
 ## Estrutura
 
 ```
-index.html            home pública
+index.html            home pública (hero com foto de show + seção sobre a banda)
 repertorio.html       repertório público (só músicas ativas)
-shows.html            agenda pública (+ setlists liberadas)
+shows.html            agenda pública (próximos + cartazes dos anteriores)
 banda/                backstage (login + 4 ferramentas)
-css/style.css         identidade visual (retro 70s/80s)
+media/                foto do hero e cartazes dos shows (banners_shows/)
+js/shows-data.js      manifesto dos cartazes + helpers de exibição de shows
+css/style.css         identidade visual (cores do cartaz: carmim/violeta)
 js/config.js          URL e anon key do Supabase  ← único arquivo a configurar
 js/db.js              cliente + helpers compartilhados
 js/*.js               um módulo por página
