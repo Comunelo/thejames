@@ -29,15 +29,51 @@
   --font-mono: 'Space Mono', Consolas, monospace;
 }
 
-/* backstage: mesma estrutura, acento troca para a luz roxa do palco */
+/* backstage: identidade de camarim — âmbar de marquise sobre preto quente,
+   títulos condensados e a foto p&b da banda ao fundo */
 body.banda {
-  --accent: var(--violet);
-  --accent-solid: var(--violet-solid);
-  --stripe: linear-gradient(90deg, #5B2C93, #B98CF2);
+  --bg: #131009;
+  --bg-raised: #1E1810;
+  --line: #46381F;
+  --muted: #B5A488;
+  --accent: #F0B43C;        /* âmbar das lâmpadas de camarim */
+  --accent-solid: #C07E1A;
+  --accent-ink: #1A1204;
+  --violet: #F0B43C;        /* badge/votação seguem o âmbar aqui */
+  --violet-solid: #8A5B10;
+  --font-display: 'Barlow Condensed', 'Arial Narrow', sans-serif;
+  /* a foto tem 819x325 (altura = 39.7% da largura); o véu escuro fica
+     sólido pouco antes da borda inferior dela, sem emenda visível */
   background:
-    radial-gradient(120% 60% at 50% -10%, #221030 0%, rgba(14,8,18,0) 60%) no-repeat,
-    var(--bg);
+    linear-gradient(180deg, rgba(19, 16, 9, 0.80) 0, rgba(19, 16, 9, 0.94) 24vw, #131009 38vw)
+      center top / 100% 42vw no-repeat,
+    url("../media/backstage-bg.jpg") center top / 100% auto no-repeat,
+    #131009;
 }
+body.banda h1, body.banda h2, body.banda h3, body.banda .logo, body.banda .stat b {
+  font-weight: 600; letter-spacing: 0.05em;
+}
+/* fileira de lâmpadas de marquise no lugar da faixa lisa */
+body.banda .stripes {
+  height: 12px;
+  background:
+    radial-gradient(circle at 11px 6px, #FFDD95 0 2.6px, rgba(255, 221, 149, 0.28) 3.8px, transparent 5px)
+      0 0 / 22px 12px repeat-x,
+    #1A1206;
+}
+/* login como cartão centrado */
+body.banda #login {
+  max-width: 460px; margin: 7vh auto 0;
+  background: var(--bg-raised); border: 1px solid var(--line);
+  border-radius: 14px; padding: 26px 28px 30px;
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.5);
+}
+body.banda #login .banda-header { margin-top: 0; }
+body.banda #login .form-row { flex-direction: column; align-items: stretch; }
+body.banda #login .form-row .grow { flex: 0 0 auto; }
+body.banda #login .btn { width: 100%; margin-top: 6px; }
+body.banda .menu-grid a.card { transition: transform 0.15s ease, border-color 0.15s ease; }
+body.banda .menu-grid a.card:hover { transform: translateY(-2px); }
 
 * { box-sizing: border-box; }
 
