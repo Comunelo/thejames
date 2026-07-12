@@ -152,36 +152,94 @@ async function openCard(poll) {
       .eq("poll_id", poll.id).eq("member_id", session.user.id),
     db.rpc("poll_progress", { p_poll_id: poll.id }),
   ]);
-  const mine = new Set((myVotes ?? []).map((v) => v.candidate_id));
-  const used = mine.size;
+  const mine = new Set((myVotes ?? []).map((v) => v.candidate_id));   // votos salvos
+  const local = new Set(mine);                                        // seleção na tela
+  let sort = { by: null, dir: 1 };
+  const cands = poll.poll_candidates.map((pc) => pc.candidate);
 
-  const usedLabel = el("span", { class: "mono muted" },
-    `${used} de ${poll.num_winners} votos usados`);
+  const tableBox = el("div");
+  const footBox = el("div", { class: "form-row", style: "align-items:center" });
 
-  const rows = poll.poll_candidates.map(({ candidate: c }) => {
-    const cb = el("input", {
-      type: "checkbox", id: `v-${poll.id}-${c.id}`,
-      onchange: async (e) => {
-        const op = e.target.checked
-          ? db.from("votes").insert({ poll_id: poll.id, candidate_id: c.id, member_id: session.user.id })
-          : db.from("votes").delete().eq("poll_id", poll.id)
-              .eq("candidate_id", c.id).eq("member_id", session.user.id);
-        const { error } = await op;
-        if (error) show($("msg"), error.message, "error");
-        await renderOpen();
+  const dirty = () =>
+    local.size !== mine.size || [...local].some((id) => !mine.has(id));
+
+  function drawTable() {
+    const list = [...cands];
+    if (sort.by) {
+      list.sort((a, b) =>
+        sort.dir * a[sort.by].localeCompare(b[sort.by], "pt-BR", { sensitivity: "base" })
+        || a.title.localeCompare(b.title, "pt-BR", { sensitivity: "base" }));
+    }
+    const sortTh = (field, label) => el("th", {
+      class: "sortable", title: `Ordenar por ${label.toLowerCase()}`,
+      onclick: () => {
+        if (sort.by === field) sort.dir = -sort.dir;
+        else sort = { by: field, dir: 1 };
+        drawTable();
       },
-    });
-    if (mine.has(c.id)) cb.checked = true;
-    else if (used >= poll.num_winners) cb.disabled = true;
-    return el("div", { class: "cand" },
-      cb,
-      el("label", { for: cb.id, style: "font-size:15px;color:var(--ink)" },
-        el("b", {}, c.title), ` — ${c.artist}`),
-      c.spotify_url
-        ? el("a", { class: "spotify", href: c.spotify_url, target: "_blank", rel: "noopener", style: "margin-left:auto" }, "▶")
-        : null,
+    }, label, el("span", { class: "dir" },
+      sort.by === field ? (sort.dir === 1 ? " ▲" : " ▼") : ""));
+
+    tableBox.replaceChildren(el("div", { class: "tblwrap" }, el("table", {},
+      el("thead", {}, el("tr", {},
+        el("th", { class: "checkth" }),
+        sortTh("title", "Música"),
+        sortTh("artist", "Artista"),
+        el("th", {}, "Spotify"))),
+      el("tbody", {}, ...list.map((c) => {
+        const cb = el("input", {
+          type: "checkbox", id: `v-${poll.id}-${c.id}`,
+          onchange: (e) => {
+            e.target.checked ? local.add(c.id) : local.delete(c.id);
+            drawTable();
+          },
+        });
+        cb.checked = local.has(c.id);
+        if (!local.has(c.id) && local.size >= poll.num_winners) cb.disabled = true;
+        return el("tr", {},
+          el("td", {}, cb),
+          el("td", {}, el("label", { for: cb.id, style: "font-size:15px;color:var(--ink);cursor:pointer" },
+            el("b", {}, c.title))),
+          el("td", {}, c.artist),
+          el("td", {}, spotifyAnchor(c.spotify_url)));
+      })),
+    )));
+    drawFoot();
+  }
+
+  function drawFoot() {
+    footBox.replaceChildren(
+      el("span", { class: "mono muted" },
+        `${local.size} de ${poll.num_winners} votos selecionados`),
+      el("button", {
+        class: "btn small", disabled: dirty() ? null : "",
+        onclick: confirmVotes,
+      }, mine.size ? "Atualizar meus votos" : "Confirmar meus votos"),
+      !dirty() && mine.size
+        ? el("span", { class: "tag aberta" }, "✔ seus votos estão registrados")
+        : dirty()
+          ? el("span", { class: "muted", style: "font-size:13px" },
+              "Você pode mudar a seleção até confirmar.")
+          : null,
     );
-  });
+  }
+
+  async function confirmVotes() {
+    const adds = [...local].filter((id) => !mine.has(id));
+    const removes = [...mine].filter((id) => !local.has(id));
+    for (const id of removes) {
+      const { error } = await db.from("votes").delete()
+        .eq("poll_id", poll.id).eq("candidate_id", id).eq("member_id", session.user.id);
+      if (error) return show($("msg"), "Erro ao salvar votos: " + error.message, "error");
+    }
+    if (adds.length) {
+      const { error } = await db.from("votes").insert(adds.map((id) => (
+        { poll_id: poll.id, candidate_id: id, member_id: session.user.id })));
+      if (error) return show($("msg"), "Erro ao salvar votos: " + error.message, "error");
+    }
+    show($("msg"), "Votos registrados! Você pode mudá-los até o encerramento.", "ok");
+    await renderOpen();
+  }
 
   const voters = el("div", { class: "voters" }, ...(progress ?? []).map((m) =>
     el("span", { class: "tag" + (m.votes_used > 0 ? " voted" : "") },
@@ -189,18 +247,22 @@ async function openCard(poll) {
 
   const canClose = poll.created_by === session.user.id || new Date() >= new Date(poll.deadline);
 
+  drawTable();
+
   return el("div", { class: "card pollcard" },
     el("h3", { style: "margin-top:0" }, poll.title, " ",
       el("span", { class: "tag aberta" }, "aberta")),
     el("p", { class: "muted", style: "margin:4px 0 10px" },
       `${poll.num_winners} vaga(s) · prazo ${fmtDateTime(poll.deadline)} · votos ocultos até encerrar`),
-    ...rows, usedLabel, voters,
-    el("div", { class: "form-row" },
+    tableBox, footBox, voters,
+    el("div", { class: "form-row", style: "margin-top:14px;align-items:center" },
       el("button", {
-        class: "btn small" + (canClose ? "" : " ghost"),
+        class: "btn small" + (canClose ? " danger" : " ghost"),
         onclick: () => closePoll(poll),
         title: canClose ? "" : "Antes do prazo, só quem criou pode encerrar",
-      }, "Encerrar e apurar"),
+      }, "Encerrar votação e apurar"),
+      el("span", { class: "muted", style: "font-size:13px" },
+        "Encerra para todos e promove as vencedoras ao repertório."),
     ),
   );
 }
