@@ -7,12 +7,23 @@ let songs = [];
 await requireAuth();
 await load();
 
+// Capa do álbum via oEmbed público do Spotify (sem autenticação, com CORS).
+async function coverFor(spotifyUrl) {
+  if (!spotifyUrl) return null;
+  try {
+    const r = await fetch("https://open.spotify.com/oembed?url=" + encodeURIComponent(spotifyUrl));
+    return (await r.json()).thumbnail_url ?? null;
+  } catch { return null; }
+}
+
 $("add-form").addEventListener("submit", async (e) => {
   e.preventDefault();
+  const spotify = $("f-spotify").value.trim() || null;
   const { error } = await db.from("songs").insert({
     title: $("f-title").value.trim(),
     artist: $("f-artist").value.trim(),
-    spotify_url: $("f-spotify").value.trim() || null,
+    spotify_url: spotify,
+    cover_url: await coverFor(spotify),
   });
   if (error) return show($("msg"), "Erro ao adicionar: " + error.message, "error");
   e.target.reset();
@@ -48,6 +59,9 @@ function render() {
 
 function rowFor(song) {
   const tr = el("tr", {},
+    el("td", { class: "covertd" }, song.cover_url
+      ? el("img", { class: "cover", src: song.cover_url, alt: "", loading: "lazy" })
+      : el("div", { class: "cover ph" })),
     el("td", {}, el("b", {}, song.title)),
     el("td", {}, song.artist),
     el("td", {}, spotifyAnchor(song.spotify_url)),
@@ -70,15 +84,17 @@ function editRow(tr, song) {
   const a = el("input", { value: song.artist });
   const s = el("input", { value: song.spotify_url ?? "", placeholder: "link do Spotify" });
   tr.replaceChildren(
-    el("td", {}, t), el("td", {}, a), el("td", {}, s),
+    el("td", { class: "covertd" }), el("td", {}, t), el("td", {}, a), el("td", {}, s),
     el("td", {}, el("span", { class: "tag " + song.status }, song.status)),
     el("td", {}, el("div", { class: "rowactions" },
       el("button", {
         class: "iconbtn", title: "Salvar",
         onclick: async () => {
+          const spotify = s.value.trim() || null;
           const { error } = await db.from("songs").update({
             title: t.value.trim(), artist: a.value.trim(),
-            spotify_url: s.value.trim() || null,
+            spotify_url: spotify,
+            cover_url: await coverFor(spotify),
           }).eq("id", song.id);
           if (error) return show($("msg"), "Erro ao salvar: " + error.message, "error");
           await load();

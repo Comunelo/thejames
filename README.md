@@ -51,6 +51,10 @@ integrante em minúsculas e sem acentos, e a senha inicial é o telefone dele
 5. Para carregar o repertório inicial (as 25 músicas da setlist de 26/06) e
    registrar os shows já feitos: rode
    [`supabase/seed-repertorio.sql`](supabase/seed-repertorio.sql) no SQL Editor.
+6. Para os links do Spotify e as capas dos álbuns no repertório: rode
+   [`supabase/update-spotify.sql`](supabase/update-spotify.sql) no SQL Editor.
+   (Músicas novas ganham capa sozinhas quando alguém cola o link do Spotify
+   no backstage.)
 
 ### 3. Apontar o site para o Supabase
 
@@ -104,4 +108,5 @@ js/*.js               um módulo por página
 supabase/schema.sql   tabelas, regras de segurança e funções de votação
 supabase/migracao-login-senha.sql   migração p/ bancos criados na era do magic link
 supabase/seed-repertorio.sql        carga inicial do repertório (setlist de 26/06)
+supabase/update-spotify.sql         links do Spotify + capas dos álbuns
 ```

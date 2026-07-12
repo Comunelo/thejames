@@ -218,6 +218,14 @@ tr:last-child td { border-bottom: none; }
 
 .spotify { text-decoration: none; font-size: 14px; white-space: nowrap; }
 
+/* capa do álbum (miniatura do Spotify) nas tabelas de repertório */
+th.coverth, td.covertd { width: 44px; padding-right: 0; }
+.cover {
+  width: 40px; height: 40px; border-radius: 6px; object-fit: cover;
+  display: block; background: var(--bg);
+}
+.cover.ph { border: 1px dashed var(--line); }
+
 .muted { color: var(--muted); }
 .mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
 .empty { color: var(--muted); font-style: italic; padding: 18px 4px; }
