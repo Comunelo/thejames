@@ -27,7 +27,6 @@ create table public.songs (
   title        text not null,
   artist       text not null,
   spotify_url  text,
-  cover_url    text,  -- capa do álbum (thumbnail_url do oEmbed público do Spotify)
   status       text not null default 'ativa' check (status in ('ativa','aposentada')),
   from_poll_id uuid,
   added_at     timestamptz not null default now()

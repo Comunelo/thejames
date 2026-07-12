@@ -21,9 +21,6 @@ function render() {
     !q || s.title.toLowerCase().includes(q) || s.artist.toLowerCase().includes(q));
   $("count").textContent = `${list.length} música(s)`;
   $("rows").replaceChildren(...list.map((s) => el("tr", {},
-    el("td", { class: "covertd" }, s.cover_url
-      ? el("img", { class: "cover", src: s.cover_url, alt: "", loading: "lazy" })
-      : el("div", { class: "cover ph" })),
     el("td", {}, el("b", {}, s.title)),
     el("td", {}, s.artist),
     el("td", {}, spotifyAnchor(s.spotify_url)),
