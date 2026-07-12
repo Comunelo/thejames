@@ -115,6 +115,14 @@ nav.site .logo span { color: var(--accent); }
 nav.site a { color: var(--muted); text-decoration: none; font-size: 15px; font-weight: 500; }
 nav.site a:hover, nav.site a.active { color: var(--accent); }
 
+/* destaque do Backstage no menu público: selo âmbar de camarim */
+nav.site a.bk {
+  font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.14em;
+  text-transform: uppercase; color: #F0B43C;
+  border: 1px solid #8A5B10; border-radius: 4px; padding: 4px 12px;
+}
+nav.site a.bk:hover { background: #F0B43C; color: #1A1204; }
+
 .badge {
   font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.22em;
   text-transform: uppercase; color: var(--violet);
@@ -123,8 +131,13 @@ nav.site a:hover, nav.site a.active { color: var(--accent); }
   margin-right: auto;
 }
 nav.site:has(.badge) .logo { margin-right: 0; }
-nav.site a.backlink { font-size: 13px; color: var(--muted); }
-nav.site a.backlink:hover { color: var(--ink); }
+/* no backstage, o caminho de volta ganha o selo carmim do site público */
+nav.site a.backlink {
+  font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.12em;
+  text-transform: uppercase; color: #FF3B5C;
+  border: 1px solid #AF072A; border-radius: 4px; padding: 4px 12px;
+}
+nav.site a.backlink:hover { background: #AF072A; color: #FFFFFF; }
 
 /* ---------- hero-cartaz (home pública) ----------
    Como no cartaz de verdade: título inteiro no bloco carmim, foto embaixo
@@ -145,6 +158,21 @@ nav.site a.backlink:hover { color: var(--ink); }
     url("../media/hero.jpg") center 32% / cover no-repeat #14060F;
 }
 .poster-photo .inner { padding-top: 26px; padding-bottom: 26px; }
+
+/* celular: mostra a foto inteira (sem cortar os músicos das pontas);
+   a foto tem proporção 1920x816 → altura = 42.5% da largura da tela */
+@media (max-width: 640px) {
+  .poster-photo {
+    min-height: 0;
+    padding-top: 40vw;
+    background:
+      linear-gradient(180deg, var(--red) 0, rgba(175, 7, 42, 0) 6vw),
+      linear-gradient(180deg, rgba(14, 8, 18, 0) 32vw, var(--bg) 42.5vw),
+      url("../media/hero.jpg") center top / 100% auto no-repeat,
+      var(--bg);
+  }
+  .poster-photo .inner { padding-top: 0; }
+}
 .poster .lede {
   font-size: clamp(17px, 2.2vw, 20px); color: var(--ink); max-width: 46ch;
   margin: 0 0 16px; text-shadow: 0 1px 12px rgba(14, 8, 18, 0.9);
