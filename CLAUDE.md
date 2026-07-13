@@ -32,7 +32,10 @@ Setup completo e passos pendentes: ver README.md.
   de votações uma vez).
 - Páginas do backstage são testáveis sem credenciais: sessão falsa no
   localStorage (`sb-<ref>-auth-token`) + Playwright interceptando
-  `lpadlajkeqepdabitgvp.supabase.co` com um mock em memória.
+  `lpadlajkeqepdabitgvp.supabase.co` com um mock em memória. Suítes prontas
+  em `testes-e2e/` (gitignored, só no Dropbox): subir
+  `python -m http.server 8123 --bind 127.0.0.1` na raiz e rodar os `.py`
+  com `PYTHONIOENCODING=utf-8`.
 
 ## Cuidados neste ambiente
 - `git push` pode falhar com erro HTTP2 → usar `git -c http.version=HTTP/1.1 push`.
