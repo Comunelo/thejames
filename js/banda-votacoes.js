@@ -133,7 +133,7 @@ $("poll-form").addEventListener("submit", async (e) => {
 
 async function renderOpen() {
   const { data: polls } = await db.from("polls")
-    .select("*, poll_candidates(candidate:candidates(*))")
+    .select("*, poll_candidates(added_at, candidate:candidates(*))")
     .eq("status", "aberta").order("created_at", { ascending: false });
   const box = $("open-list");
   if (!polls?.length) {
@@ -230,7 +230,8 @@ async function openCard(poll) {
   }
 
   function drawFoot() {
-    footBox.replaceChildren(
+    // replaceChildren converte null em texto "null" — filtrar antes
+    footBox.replaceChildren(...[
       el("span", { class: "mono muted" },
         `${local.size} de ${poll.num_winners} votos selecionados`),
       el("button", {
@@ -243,7 +244,7 @@ async function openCard(poll) {
           ? el("span", { class: "muted", style: "font-size:13px" },
               "Você pode mudar a seleção até confirmar.")
           : null,
-    );
+    ].filter(Boolean));
   }
 
   async function confirmVotes() {
@@ -267,6 +268,55 @@ async function openCard(poll) {
     el("span", { class: "tag" + (m.votes_used > 0 ? " voted" : "") },
       `${m.name} ${m.votes_used > 0 ? "✔" : "…"}`)));
 
+  // candidatas que entraram depois da abertura (added_at preenchido)
+  const lateCount = poll.poll_candidates.filter((pc) => pc.added_at).length;
+
+  // painel do admin para adicionar candidatas 'sugerida' à votação aberta
+  const addBox = el("div");
+
+  async function openAddPanel() {
+    const { data: sugeridas } = await db.from("candidates")
+      .select("*").eq("status", "sugerida").order("created_at");
+    if (!sugeridas?.length) {
+      addBox.replaceChildren(el("p", { class: "empty" },
+        "Nenhuma candidata sugerida disponível — adicione músicas em Candidatas primeiro."));
+      return;
+    }
+    const picks = sugeridas.map((c) => {
+      const cb = el("input", { type: "checkbox", id: `add-${poll.id}-${c.id}` });
+      return { c, cb };
+    });
+    addBox.replaceChildren(el("div", { class: "myvotes" },
+      el("h4", {}, "Adicionar candidatas à votação"),
+      ...picks.map(({ c, cb }) => el("div", { class: "cand" }, cb,
+        el("label", { for: cb.id, style: "cursor:pointer" },
+          el("b", {}, c.title), ` — ${c.artist}`))),
+      el("div", { class: "form-row", style: "margin-top:10px" },
+        el("button", {
+          class: "btn small",
+          onclick: async () => {
+            const chosen = picks.filter((p) => p.cb.checked).map((p) => p.c.id);
+            if (!chosen.length) {
+              return show($("msg"), "Marque pelo menos uma candidata para adicionar.", "error");
+            }
+            const { error } = await db.rpc("add_poll_candidates", {
+              p_poll_id: poll.id, p_candidate_ids: chosen,
+            });
+            if (error) return show($("msg"), "Erro ao adicionar candidatas: " + error.message, "error");
+            show($("msg"),
+              chosen.length === 1
+                ? "1 candidata adicionada — a banda verá o aviso no card da votação."
+                : `${chosen.length} candidatas adicionadas — a banda verá o aviso no card da votação.`,
+              "ok");
+            await refresh();
+          },
+        }, "Adicionar à votação"),
+        el("button", { class: "btn small ghost", onclick: () => addBox.replaceChildren() },
+          "Cancelar"),
+      ),
+    ));
+  }
+
   drawTable();
 
   return el("div", { class: "card pollcard" },
@@ -274,14 +324,25 @@ async function openCard(poll) {
       el("span", { class: "tag aberta" }, "aberta")),
     el("p", { class: "muted", style: "margin:4px 0 10px" },
       `${poll.num_winners} vaga(s) · prazo ${fmtDateTime(poll.deadline)} · votos ocultos até encerrar`),
+    lateCount
+      ? el("div", { class: "notice", style: "margin:10px 0" },
+          lateCount === 1
+            ? "1 música entrou nesta votação depois da abertura — se você já votou, pode ajustar seus votos."
+            : `${lateCount} músicas entraram nesta votação depois da abertura — se você já votou, pode ajustar seus votos.`)
+      : null,
     tableBox, footBox, voters,
-    // encerrar/apurar: só o administrador vê (e o banco também só aceita admin)
+    // adicionar candidatas e encerrar/apurar: só o administrador vê
+    // (e o banco também só aceita admin)
     isAdmin
-      ? el("div", { class: "form-row", style: "margin-top:14px;align-items:center" },
-          el("button", { class: "btn small danger", onclick: () => closePoll(poll) },
-            "Encerrar votação e apurar"),
-          el("span", { class: "muted", style: "font-size:13px" },
-            "Encerra para todos e promove as vencedoras ao repertório."))
+      ? el("div", {},
+          addBox,
+          el("div", { class: "form-row", style: "margin-top:14px;align-items:center" },
+            el("button", { class: "btn small ghost", onclick: openAddPanel },
+              "Adicionar candidatas"),
+            el("button", { class: "btn small danger", onclick: () => closePoll(poll) },
+              "Encerrar votação e apurar"),
+            el("span", { class: "muted", style: "font-size:13px" },
+              "Encerra para todos e promove as vencedoras ao repertório.")))
       : null,
   );
 }
