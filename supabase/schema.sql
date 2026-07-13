@@ -110,6 +110,11 @@ returns text language sql immutable as $$
     '[^a-z0-9]', '', 'g')
 $$;
 
+-- Candidata repetida (mesma música + artista, ignorando maiúsculas,
+-- acentos e pontuação) é barrada no banco; o front avisa antes.
+create unique index candidates_unicas
+  on public.candidates (public.slugify(title), public.slugify(artist));
+
 -- Cria a linha em members quando um usuário é criado no Auth
 -- (os usuários são criados pelo admin via admin_create_member; não há cadastro aberto).
 create or replace function public.handle_new_user()
