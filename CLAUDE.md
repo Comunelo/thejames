@@ -31,7 +31,9 @@ Setup completo e passos pendentes: ver README.md.
   `criar-setlists.sql` (Set Lists: tabelas `setlists`/`setlist_items`,
   colunas `songs.duration_sec`/`songs.energy`, `shows.setlist_id`; rodar
   ANTES do deploy do front que o usa) e
-  `seed-duracao-energia.sql` (estimativas opcionais de duração/energia).
+  `seed-duracao-energia.sql` (estimativas opcionais de duração/energia) e
+  `criar-setlist-encouracado.sql` (set list do show de 26/06/2026 criada da
+  setlist tocada + vínculo em `shows.setlist_id`).
 
 - Set Lists (`banda/setlists.html`): listas reutilizáveis do repertório com
   ordem, intervalos, mapa de energia (rampa âmbar `.e1`–`.e5` no CSS) e

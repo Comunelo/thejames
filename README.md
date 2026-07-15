@@ -95,7 +95,9 @@ integrante em minúsculas e sem acentos, e a senha inicial é o telefone dele
   repertório — ordem própria (↑/↓), intervalos com duração, mapa de energia
   (barras âmbar, 1–5 por música) e duração total estimada. "Associar e aplicar"
   grava a lista como setlist de um show (substitui a lista dele; impressão e
-  setlist pública continuam saindo da página Shows). Duração (m:ss) e energia
+  setlist pública continuam saindo da página Shows). "⤓ Importar setlist"
+  recria a lista a partir da setlist de um show ou de outra set list
+  (avisa que os itens atuais serão excluídos). Duração (m:ss) e energia
   de cada música são cadastradas no Repertório do backstage.
 
 ## Estrutura
@@ -121,4 +123,5 @@ supabase/ajuste-encerrar-so-admin.sql  só o admin encerra/apura votações
 supabase/ajuste-encerrar-sem-promover.sql  encerrar só publica o ranking (sem promoção ao repertório)
 supabase/criar-setlists.sql         Set Lists (tabelas, duração/energia em songs, shows.setlist_id)
 supabase/seed-duracao-energia.sql   estimativas de duração/energia das 31 músicas (opcional, editável)
+supabase/criar-setlist-encouracado.sql  set list do show de 26/06/2026 a partir da setlist tocada
 ```

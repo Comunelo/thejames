@@ -150,6 +150,7 @@ function renderEditor() {
   $("ed-title").textContent = current.name;
   $("e-name").value = current.name;
   $("e-notes").value = current.notes ?? "";
+  $("import-box").replaceChildren();
   renderItems();
   renderEnergyMap();
   renderShows();
@@ -546,6 +547,87 @@ function editIntervalRow(tr, it) {
   );
   lbl.focus();
 }
+
+// ---------- importar setlist existente ----------
+
+// Origens: a setlist tocada de um show (show_songs) ou outra set list.
+// A importação SUBSTITUI a lista inteira: se houver itens, o usuário é
+// avisado de que todos serão excluídos e a lista recriada da origem.
+async function openImportPanel() {
+  const box = $("import-box");
+  const { data: ss, error } = await db.from("show_songs").select("show_id");
+  if (error) return show($("msg"), "Erro ao listar setlists de shows: " + error.message, "error");
+  const counts = {};
+  for (const r of ss ?? []) counts[r.show_id] = (counts[r.show_id] ?? 0) + 1;
+
+  const showOpts = allShows.filter((s) => counts[s.id]).map((s) =>
+    el("option", { value: "show:" + s.id }, `${fmtShow(s)} · ${counts[s.id]} música(s)`));
+  const slOpts = setlists
+    .filter((s) => s.id !== current.id && (s.setlist_items ?? []).length)
+    .map((s) => el("option", { value: "setlist:" + s.id },
+      `${s.name} · ${s.setlist_items.length} item(ns)`));
+  if (!showOpts.length && !slOpts.length) {
+    return show($("msg"),
+      "Nada para importar: nenhum show com setlist e nenhuma outra set list com itens.", "error");
+  }
+
+  const pick = el("select", {},
+    ...(showOpts.length ? [el("optgroup", { label: "Setlist de um show" }, ...showOpts)] : []),
+    ...(slOpts.length ? [el("optgroup", { label: "Outra set list" }, ...slOpts)] : []));
+  box.replaceChildren(el("div", { class: "card" },
+    el("div", { class: "form-row", style: "align-items:flex-end" },
+      el("div", { class: "field grow" },
+        el("label", { for: "import-pick" }, "Importar de"), pick),
+      el("button", { class: "btn small", onclick: () => runImport(pick.value) }, "Importar"),
+      el("button", { class: "btn small ghost", onclick: () => box.replaceChildren() }, "Cancelar"),
+    ),
+    el("p", { class: "muted", style: "margin:6px 0 0;font-size:13px" },
+      "A importação substitui a lista inteira: os itens atuais são excluídos e a set list é recriada a partir da origem."),
+  ));
+  pick.id = "import-pick";
+}
+
+async function runImport(value) {
+  const [type, id] = value.split(":");
+  let rows = [], origem = "";
+  if (type === "show") {
+    const s = allShows.find((x) => x.id === id);
+    origem = `da setlist do show de ${fmtShow(s)}`;
+    const { data, error } = await db.from("show_songs")
+      .select("song_id, position").eq("show_id", id).order("position");
+    if (error) return show($("msg"), "Erro ao ler a setlist do show: " + error.message, "error");
+    rows = (data ?? []).map((r, i) => ({
+      setlist_id: current.id, position: i + 1, kind: "song", song_id: r.song_id,
+    }));
+  } else {
+    const src = setlists.find((x) => x.id === id);
+    origem = `da set list "${src.name}"`;
+    rows = sortedItems(src).map((it, i) => ({
+      setlist_id: current.id, position: i + 1, kind: it.kind,
+      song_id: it.song?.id ?? null,
+      duration_sec: it.kind === "interval" ? it.duration_sec : null,
+      label: it.label,
+    }));
+  }
+  if (!rows.length) return show($("msg"), "A origem escolhida está vazia.", "error");
+
+  if (items.length &&
+      !confirm(`Esta set list já tem ${items.length} item(ns). A importação vai EXCLUIR todos eles: ` +
+        `a lista é zerada e recriada a partir ${origem}. Continuar?`)) return;
+
+  let { error } = await db.from("setlist_items").delete().eq("setlist_id", current.id);
+  if (error) return show($("msg"), "Erro ao limpar a set list: " + error.message, "error");
+  ({ error } = await db.from("setlist_items").insert(rows));
+  if (error) {
+    show($("msg"), "Erro ao importar: " + error.message, "error");
+    return loadAll();
+  }
+  $("import-box").replaceChildren();
+  show($("msg"), `Importação concluída — ${rows.length} item(ns) importados ${origem}.`, "ok");
+  await loadAll();
+}
+
+$("import-open").addEventListener("click", openImportPanel);
 
 // ---------- mapa de energia ----------
 
