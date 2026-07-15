@@ -85,10 +85,11 @@ integrante em minúsculas e sem acentos, e a senha inicial é o telefone dele
   `admin_set_password` no SQL Editor.
 - **Fluxo das músicas novas**: qualquer integrante sugere em **Candidatas** →
   alguém abre uma **Votação** (X vagas + prazo) → cada um dá seus X votos
-  (ocultos até o fim) → ao encerrar, as mais votadas entram sozinhas no
-  **Repertório**; as demais voltam para a caixa de sugestões.
-- **Empate na última vaga**: quem encerra a votação escolhe entre as empatadas
-  (a tela pede o desempate).
+  (ocultos até o fim) → o admin encerra e o ranking completo fica visível
+  para todos na aba Encerradas, com destaque (🏆) para as X mais votadas
+  (empates na linha de corte também destacados). Nada entra no repertório
+  automaticamente — a banda decide depois, à vista do resultado — e todas
+  as candidatas voltam para a caixa de sugestões.
 
 ## Estrutura
 
@@ -110,4 +111,5 @@ supabase/update-spotify.sql         links do Spotify do repertório
 supabase/insert-musicas-faltantes.sql  músicas das setlists antigas (completa as 31)
 supabase/seed-candidatas.sql        28 candidatas da planilha p/ a próxima votação
 supabase/ajuste-encerrar-so-admin.sql  só o admin encerra/apura votações
+supabase/ajuste-encerrar-sem-promover.sql  encerrar só publica o ranking (sem promoção ao repertório)
 ```

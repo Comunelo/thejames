@@ -1,6 +1,8 @@
 // Backstage: votações (feature D).
-// Regras: X votos por integrante (1 por música), votos ocultos até encerrar,
-// top X promovidas ao repertório; empate na última vaga → quem encerra escolhe.
+// Regras: X votos por integrante (1 por música), votos ocultos até encerrar.
+// Encerrar (só admin) apenas publica o ranking para todos, com destaque para
+// as X mais votadas — nada entra no repertório automaticamente e todas as
+// candidatas voltam para a caixa de sugestões.
 import { db, requireAuth, el, show, fmtDateTime, spotifyAnchor } from "./db.js";
 
 const $ = (id) => document.getElementById(id);
@@ -331,7 +333,7 @@ async function openCard(poll) {
             : `${lateCount} músicas entraram nesta votação depois da abertura — se você já votou, pode ajustar seus votos.`)
       : null,
     tableBox, footBox, voters,
-    // adicionar candidatas e encerrar/apurar: só o administrador vê
+    // adicionar candidatas e encerrar: só o administrador vê
     // (e o banco também só aceita admin)
     isAdmin
       ? el("div", {},
@@ -340,58 +342,19 @@ async function openCard(poll) {
             el("button", { class: "btn small ghost", onclick: openAddPanel },
               "Adicionar candidatas"),
             el("button", { class: "btn small danger", onclick: () => closePoll(poll) },
-              "Encerrar votação e apurar"),
+              "Encerrar votação"),
             el("span", { class: "muted", style: "font-size:13px" },
-              "Encerra para todos e promove as vencedoras ao repertório.")))
+              "Encerra para todos e publica o resultado na aba Encerradas — nada entra no repertório automaticamente.")))
       : null,
   );
 }
 
-async function closePoll(poll, tiebreak = null) {
-  if (!tiebreak &&
-      !confirm(`Encerrar "${poll.title}" e promover as ${poll.num_winners} mais votadas ao repertório?`)) return;
-  const { error } = await db.rpc("close_poll", {
-    p_poll_id: poll.id, p_tiebreak: tiebreak,
-  });
-  if (error) {
-    if (error.message.includes("EMPATE")) return tieBreak(poll, error);
-    return show($("msg"), error.message, "error");
-  }
-  show($("msg"), "Votação encerrada — vencedoras já estão no repertório! 🎸", "ok");
+async function closePoll(poll) {
+  if (!confirm(`Encerrar "${poll.title}"? O resultado ficará visível para todos na aba Encerradas.`)) return;
+  const { error } = await db.rpc("close_poll", { p_poll_id: poll.id });
+  if (error) return show($("msg"), error.message, "error");
+  show($("msg"), "Votação encerrada — resultado disponível na aba Encerradas.", "ok");
   await refresh();
-}
-
-// Empate na última vaga: quem encerra escolhe entre as empatadas.
-function tieBreak(poll, error) {
-  const tied = JSON.parse(error.details || "[]");
-  const slots = parseInt(error.hint || "1", 10);
-  const picks = tied.map((c) => {
-    const cb = el("input", { type: "checkbox", value: c.id });
-    return { c, cb };
-  });
-  const dialog = el("div", { class: "card pollcard" },
-    el("h3", { style: "margin-top:0" }, "Empate na última vaga"),
-    el("p", { class: "muted" },
-      `Estas músicas empataram. Escolha ${slots} para completar as vagas:`),
-    ...picks.map(({ c, cb }) => el("div", { class: "cand" }, cb,
-      el("label", {}, el("b", {}, c.title), ` — ${c.artist}`))),
-    el("div", { class: "form-row" },
-      el("button", {
-        class: "btn small",
-        onclick: () => {
-          const chosen = picks.filter((p) => p.cb.checked).map((p) => p.c.id);
-          if (chosen.length !== slots) {
-            return show($("msg"), `Escolha exatamente ${slots}.`, "error");
-          }
-          dialog.remove();
-          closePoll(poll, chosen);
-        },
-      }, "Confirmar desempate"),
-      el("button", { class: "btn small ghost", onclick: () => dialog.remove() }, "Cancelar"),
-    ),
-  );
-  $("open-list").prepend(dialog);
-  dialog.scrollIntoView({ behavior: "smooth" });
 }
 
 // ---------- votações encerradas ----------
@@ -410,31 +373,38 @@ async function renderClosed() {
 }
 
 async function closedCard(poll) {
-  const [{ data: votes }, { data: promoted }] = await Promise.all([
-    db.from("votes").select("candidate_id").eq("poll_id", poll.id),
-    db.from("songs").select("title, artist").eq("from_poll_id", poll.id),
-  ]);
+  const { data: votes } = await db.from("votes")
+    .select("candidate_id").eq("poll_id", poll.id);
   const count = {};
   for (const v of votes ?? []) count[v.candidate_id] = (count[v.candidate_id] ?? 0) + 1;
-  const winners = new Set((promoted ?? []).map((s) => `${s.title}|${s.artist}`));
   const max = Math.max(1, ...Object.values(count));
 
-  const rows = poll.poll_candidates
+  const ranked = poll.poll_candidates
     .map(({ candidate: c }) => ({ c, n: count[c.id] ?? 0 }))
-    .sort((a, b) => b.n - a.n)
-    .map(({ c, n }) => el("div", { class: "cand" },
+    .sort((a, b) => b.n - a.n || a.c.title.localeCompare(b.c.title));
+
+  // Destaque: as num_winners mais votadas; empatadas com a última colocada
+  // destacada também entram (não há desempate — o resultado é um ranking).
+  const cut = ranked[poll.num_winners - 1]?.n ?? 0;
+
+  const rows = ranked.map(({ c, n }) => {
+    const top = n > 0 && n >= cut;
+    return el("div", { class: top ? "cand top" : "cand" },
       el("span", { class: "mono", style: "min-width:2ch" }, String(n)),
       el("div", { style: "flex:1" },
         el("div", {},
-          winners.has(`${c.title}|${c.artist}`) ? "🏆 " : "",
+          top ? "🏆 " : "",
           el("b", {}, c.title), ` — ${c.artist}`),
         el("div", { class: "votebar", style: `width:${(n / max) * 100}%;opacity:${n ? 1 : 0.15}` }),
       ),
-    ));
+    );
+  });
 
   return el("div", { class: "card pollcard" },
     el("h3", { style: "margin-top:0" }, poll.title, " ",
       el("span", { class: "tag encerrada" }, "encerrada")),
+    el("p", { class: "muted", style: "margin:4px 0 10px" },
+      `resultado final · 🏆 as ${poll.num_winners} mais votadas`),
     ...rows,
   );
 }

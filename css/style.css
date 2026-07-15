@@ -419,6 +419,8 @@ input[type="checkbox"] { accent-color: var(--accent); }
 .pollcard .cand:last-child { border-bottom: none; }
 .pollcard .cand input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--accent); }
 .pollcard .votebar { height: 8px; background: linear-gradient(90deg, var(--violet-solid), var(--violet)); border-radius: 4px; }
+.pollcard .cand.top b { color: var(--accent); }
+.pollcard .cand.top .votebar { background: linear-gradient(90deg, var(--accent-solid), var(--accent)); }
 .voters { display: flex; gap: 8px; flex-wrap: wrap; margin: 10px 0; }
 .voters .tag.voted { border-color: var(--ok); color: var(--ok); }
 

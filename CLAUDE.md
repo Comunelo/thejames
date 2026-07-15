@@ -21,9 +21,13 @@ Setup completo e passos pendentes: ver README.md.
   `migracao-login-senha.sql`, `seed-repertorio.sql`, `update-spotify.sql`
   (os três últimos já rodados no banco de produção em 12/07/2026) e
   `adicionar-candidatas-votacao.sql` (coluna `poll_candidates.added_at` +
-  função `add_poll_candidates`; rodar ANTES do deploy do front que a usa) e
+  função `add_poll_candidates`; rodar ANTES do deploy do front que a usa),
   `remover-rosanna-duplicada.sql` (merge da Rosanna duplicada + índice único
-  `candidates_unicas` em `slugify(title), slugify(artist)`).
+  `candidates_unicas` em `slugify(title), slugify(artist)`),
+  `ajuste-encerrar-so-admin.sql` (já rodado em produção) e
+  `ajuste-encerrar-sem-promover.sql` (novo `close_poll(uuid)` sem promoção ao
+  repertório e sem desempate — encerrar só publica o ranking; rodar ANTES do
+  deploy do front que o usa).
 
 - Ferramentas do backstage com mais de um contexto usam abas (`.tabs`/`.tab`,
   ver Votações e Shows); tabelas têm cabeçalhos ordenáveis (`th.sortable`).
