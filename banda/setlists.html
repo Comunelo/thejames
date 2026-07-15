@@ -60,27 +60,19 @@
         <button class="btn danger small" type="button" id="e-delete">Excluir</button>
       </form>
 
-      <h3>Músicas e intervalos</h3>
+      <h3>Sequência do show</h3>
+      <div id="sl-stats" class="statrow"></div>
+      <div class="form-row">
+        <button class="btn" type="button" id="song-add-open">＋ Adicionar músicas</button>
+        <button class="btn ghost" type="button" id="int-add">＋ Intervalo</button>
+      </div>
       <div class="tblwrap">
         <table>
-          <thead><tr><th>#</th><th>Música</th><th>Artista</th><th>Energia</th><th>Duração</th><th></th></tr></thead>
+          <thead><tr><th></th><th>#</th><th>Música</th><th>Artista</th><th>Energia</th><th>Duração</th><th></th></tr></thead>
           <tbody id="item-rows"></tbody>
         </table>
       </div>
       <p class="muted" id="sl-summary"></p>
-
-      <div class="form-row">
-        <div class="field grow"><label for="song-pick">Adicionar do repertório</label>
-          <select id="song-pick"></select></div>
-        <button class="btn" type="button" id="song-add">Adicionar música</button>
-      </div>
-      <div class="form-row">
-        <div class="field"><label for="int-min">Intervalo (min)</label>
-          <input id="int-min" type="number" min="1" value="15" style="width:90px"></div>
-        <div class="field grow"><label for="int-label">Rótulo</label>
-          <input id="int-label" placeholder="Intervalo"></div>
-        <button class="btn ghost" type="button" id="int-add">Adicionar intervalo</button>
-      </div>
 
       <h3>Mapa de energia</h3>
       <div class="card">
@@ -102,6 +94,26 @@
         e substitui a lista de músicas dele (intervalos não entram). Se você mudar a set list
         depois, use “Reaplicar” no show correspondente.</p>
     </section>
+
+    <!-- Modal: adicionar músicas do repertório à set list -->
+    <div id="song-modal" class="modal-overlay" hidden>
+      <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+        <header>
+          <h3 id="modal-title">Adicionar do repertório</h3>
+          <button class="iconbtn" id="modal-close" type="button" title="Fechar" aria-label="Fechar">✕</button>
+        </header>
+        <div class="modal-body">
+          <div class="field"><label for="modal-search">Buscar</label>
+            <input id="modal-search" type="search" placeholder="música ou artista…" autocomplete="off"></div>
+          <div id="modal-table"></div>
+        </div>
+        <footer>
+          <span class="mono muted grow" id="modal-count">0 selecionadas</span>
+          <button class="btn ghost small" id="modal-cancel" type="button">Cancelar</button>
+          <button class="btn" id="modal-add" type="button" disabled>Adicionar</button>
+        </footer>
+      </div>
+    </div>
   </div>
   <script type="module" src="../js/banda-setlists.js"></script>
 </body>

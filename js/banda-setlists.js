@@ -3,7 +3,11 @@
 // energia e duração estimada. Associar a um show grava shows.setlist_id e
 // copia as músicas para show_songs (impressão e setlist pública continuam
 // funcionando pela página de Shows, sem mudança lá).
-import { db, requireAuth, el, show, fmtDate, fmtDur, parseDur } from "./db.js";
+// UX: músicas entram por modal multi-seleção (busca + ordenação, padrão do
+// picker de votações); reordenação por arraste no puxador (Pointer Events,
+// mouse e toque) com ↑/↓ como alternativa; intervalos em 1 toque com edição
+// inline; resumo em cards fixos no topo do scroll.
+import { db, requireAuth, el, show, fmtDate, fmtDur } from "./db.js";
 
 const $ = (id) => document.getElementById(id);
 const { session } = await requireAuth();
@@ -13,6 +17,13 @@ let current = null;   // set list aberta no editor
 let items = [];       // itens da set list aberta, ordenados por position
 let repertoire = [];  // músicas ativas
 let allShows = [];    // todos os shows (para o seletor de associação)
+
+// estado da modal de músicas
+const modalPicked = new Set();          // ids na ordem dos cliques
+let modalSort = { by: "artist", dir: 1 };
+let lastPickIndex = -1;                 // p/ shift+clique (faixa)
+let savedScrollY = 0;
+let escHandler = null;
 
 // ---------- abas ----------
 const TABS = ["lists", "new"];
@@ -187,35 +198,56 @@ $("e-dup").addEventListener("click", async () => {
   select(data.id);
 });
 
+// ---------- resumo em cards ----------
+
+function renderStats() {
+  const s = summary(items);
+  $("sl-stats").replaceChildren(
+    el("div", { class: "stat" }, el("b", {}, String(s.nSongs)), el("span", {}, "Músicas")),
+    el("div", { class: "stat" }, el("b", {}, String(s.nIntervals)), el("span", {}, "Intervalos")),
+    el("div", { class: "stat" }, el("b", {}, "~" + fmtTotal(s.totalSec)), el("span", {}, "Duração estimada")),
+    ...(s.missing ? [el("div", { class: "stat" },
+      el("b", { style: "color:var(--danger)" }, String(s.missing)), el("span", {}, "Sem duração"))] : []),
+  );
+}
+
 // ---------- itens (músicas e intervalos) ----------
 
+function energySpan(energy) {
+  return energy
+    ? el("span", {}, el("span", { class: "energy-dot e" + energy }), `${energy}/5`)
+    : el("span", { class: "muted" }, "—");
+}
+
 function itemRow(it, i) {
+  const isInt = it.kind === "interval";
   const actions = el("td", {}, el("div", { class: "rowactions" },
-    el("button", { class: "iconbtn", disabled: i === 0 ? "" : null, onclick: () => move(i, -1) }, "↑"),
-    el("button", { class: "iconbtn", disabled: i === items.length - 1 ? "" : null, onclick: () => move(i, 1) }, "↓"),
-    el("button", { class: "iconbtn", onclick: () => removeItem(it) }, "✕"),
+    ...(isInt ? [el("button", {
+      class: "iconbtn", title: "Editar intervalo",
+      onclick: (e) => editIntervalRow(e.currentTarget.closest("tr"), it),
+    }, "✎")] : []),
+    el("button", { class: "iconbtn", title: "Mover para cima", disabled: i === 0 ? "" : null, onclick: () => move(i, -1) }, "↑"),
+    el("button", { class: "iconbtn", title: "Mover para baixo", disabled: i === items.length - 1 ? "" : null, onclick: () => move(i, 1) }, "↓"),
+    el("button", { class: "iconbtn", title: "Remover", onclick: () => removeItem(it) }, "✕"),
   ));
-  if (it.kind === "interval") {
-    return el("tr", { class: "interval-row" },
-      el("td", { class: "mono" }, String(i + 1)),
-      el("td", {}, "⏸ " + (it.label || "Intervalo")),
-      el("td", {}, "—"),
-      el("td", {}, "—"),
-      el("td", {}, `${Math.round(it.duration_sec / 60)} min`),
-      actions,
-    );
-  }
-  const e = it.song?.energy;
-  return el("tr", {},
-    el("td", { class: "mono" }, String(i + 1)),
-    el("td", {}, el("b", {}, it.song.title)),
-    el("td", {}, it.song.artist),
-    el("td", {}, e
-      ? el("span", {}, el("span", { class: "energy-dot e" + e }), `${e}/5`)
-      : el("span", { class: "muted" }, "—")),
-    el("td", {}, fmtDur(it.song.duration_sec) || el("span", { class: "muted" }, "—")),
-    actions,
-  );
+  const handle = el("td", { class: "draghandle", title: "Arraste para reordenar" }, "⠿");
+  const tr = isInt
+    ? el("tr", { class: "interval-row" }, handle,
+        el("td", { class: "mono" }, String(i + 1)),
+        el("td", {}, "⏸ " + (it.label || "Intervalo")),
+        el("td", {}, "—"),
+        el("td", {}, "—"),
+        el("td", {}, `${Math.round(it.duration_sec / 60)} min`),
+        actions)
+    : el("tr", {}, handle,
+        el("td", { class: "mono" }, String(i + 1)),
+        el("td", {}, el("b", {}, it.song.title)),
+        el("td", {}, it.song.artist),
+        el("td", {}, energySpan(it.song.energy)),
+        el("td", {}, fmtDur(it.song.duration_sec) || el("span", { class: "muted" }, "—")),
+        actions);
+  attachDrag(tr, handle);
+  return tr;
 }
 
 function renderItems() {
@@ -223,55 +255,296 @@ function renderItems() {
   tbody.replaceChildren(...items.map(itemRow));
   if (!items.length) {
     tbody.replaceChildren(el("tr", {},
-      el("td", { colspan: "6", class: "empty" }, "Lista vazia — adicione músicas abaixo.")));
+      el("td", { colspan: "7", class: "empty" }, "Lista vazia — use “＋ Adicionar músicas”.")));
   }
   $("sl-summary").textContent = items.length ? summaryText(items) : "";
-
-  const inList = new Set(items.filter((i) => i.kind === "song").map((i) => i.song.id));
-  $("song-pick").replaceChildren(...repertoire
-    .filter((s) => !inList.has(s.id))
-    .map((s) => el("option", { value: s.id }, `${s.title} — ${s.artist}`)));
+  renderStats();
 }
 
-$("song-add").addEventListener("click", async () => {
-  const songId = $("song-pick").value;
-  if (!songId) return;
-  const { error } = await db.from("setlist_items").insert({
-    setlist_id: current.id, position: items.length + 1, kind: "song", song_id: songId,
-  });
-  if (error) return show($("msg"), "Erro ao adicionar: " + error.message, "error");
-  await loadAll();
-});
-
-$("int-add").addEventListener("click", async () => {
-  const min = parseInt($("int-min").value, 10);
-  if (!min || min < 1) return show($("msg"), "Informe a duração do intervalo em minutos.", "error");
-  const { error } = await db.from("setlist_items").insert({
-    setlist_id: current.id, position: items.length + 1, kind: "interval",
-    duration_sec: min * 60, label: $("int-label").value.trim() || null,
-  });
-  if (error) return show($("msg"), "Erro ao adicionar intervalo: " + error.message, "error");
-  $("int-label").value = "";
-  await loadAll();
-});
-
-async function removeItem(it) {
-  await db.from("setlist_items").delete().eq("id", it.id);
-  await renumber(items.filter((x) => x.id !== it.id));
+// Regrava as posições 1..n em UMA request (upsert pela PK id). As linhas vão
+// COMPLETAS: o INSERT do ON CONFLICT valida os NOT NULL/CHECK da tabela antes
+// do conflito. Depende de NÃO existir unique em (setlist_id, position).
+// A UI atualiza antes (otimista); erro → mensagem + recarga da verdade do banco.
+async function persistPositions() {
+  current.setlist_items = items.map((it, i) => ({ ...it, position: i + 1 }));
+  items = sortedItems(current);
+  renderItems();
+  renderEnergyMap();
+  renderList();
+  const rows = items.map((it) => ({
+    id: it.id, setlist_id: current.id, position: it.position, kind: it.kind,
+    song_id: it.song?.id ?? null,
+    duration_sec: it.kind === "interval" ? it.duration_sec : null,
+    label: it.label ?? null,
+  }));
+  if (!rows.length) return;
+  const { error } = await db.from("setlist_items").upsert(rows);
+  if (error) {
+    show($("msg"), "Erro ao reordenar: " + error.message, "error");
+    await loadAll();
+  }
 }
 
 async function move(i, delta) {
   const next = [...items];
   [next[i], next[i + delta]] = [next[i + delta], next[i]];
-  await renumber(next);
+  items = next;
+  await persistPositions();
 }
 
-// Regrava as posições 1..n na nova ordem.
-async function renumber(ordered) {
-  for (let i = 0; i < ordered.length; i++) {
-    await db.from("setlist_items").update({ position: i + 1 }).eq("id", ordered[i].id);
+async function removeItem(it) {
+  const { error } = await db.from("setlist_items").delete().eq("id", it.id);
+  if (error) return show($("msg"), "Erro ao remover: " + error.message, "error");
+  items = items.filter((x) => x.id !== it.id);
+  await persistPositions();
+}
+
+// Arrastar pelo puxador — Pointer Events (mesmo código para mouse e toque).
+// touch-action:none SÓ no puxador: o resto da linha continua rolando a página.
+// pointer-events:none na linha arrastada faz elementFromPoint ver as vizinhas.
+function attachDrag(tr, handle) {
+  handle.addEventListener("pointerdown", (e) => {
+    e.preventDefault();
+    handle.setPointerCapture(e.pointerId);
+    tr.classList.add("dragging");
+    const tbody = tr.parentNode;
+    let target = null, scrollDir = 0, rafId = null;
+    const scrollLoop = () => {
+      if (!scrollDir) { rafId = null; return; }
+      window.scrollBy(0, scrollDir);
+      rafId = requestAnimationFrame(scrollLoop);
+    };
+    const onMove = (ev) => {
+      const row = document.elementFromPoint(ev.clientX, ev.clientY)?.closest("#item-rows tr");
+      target = row && row !== tr ? row : null;
+      for (const r of tbody.children) r.classList.toggle("drop-target", r === target);
+      scrollDir = ev.clientY < 90 ? -12 : ev.clientY > window.innerHeight - 90 ? 12 : 0;
+      if (scrollDir && rafId === null) rafId = requestAnimationFrame(scrollLoop);
+    };
+    const cleanup = () => {
+      tr.classList.remove("dragging");
+      for (const r of tbody.children) r.classList.remove("drop-target");
+      scrollDir = 0;
+      if (rafId !== null) cancelAnimationFrame(rafId);
+      handle.removeEventListener("pointermove", onMove);
+      handle.removeEventListener("pointerup", onUp);
+      handle.removeEventListener("pointercancel", onCancel);
+    };
+    const onUp = () => {
+      const rows = [...tbody.children];
+      const from = rows.indexOf(tr);
+      const to = target ? rows.indexOf(target) : -1;
+      cleanup();
+      if (to >= 0 && to !== from) {
+        const next = [...items];
+        const [moved] = next.splice(from, 1);
+        next.splice(to, 0, moved);
+        items = next;
+        persistPositions();
+      }
+    };
+    const onCancel = () => cleanup();
+    handle.addEventListener("pointermove", onMove);
+    handle.addEventListener("pointerup", onUp);
+    handle.addEventListener("pointercancel", onCancel);
+  });
+}
+
+// ---------- modal: adicionar músicas do repertório ----------
+
+function modalCandidates() {
+  const inList = new Set(items.filter((i) => i.kind === "song").map((i) => i.song.id));
+  return repertoire.filter((s) => !inList.has(s.id));
+}
+
+function updateModalFooter() {
+  const n = modalPicked.size;
+  const sum = [...modalPicked].reduce((t, id) =>
+    t + (repertoire.find((s) => s.id === id)?.duration_sec ?? 0), 0);
+  $("modal-count").textContent = n
+    ? `${n} selecionada${n > 1 ? "s" : ""}` + (sum ? ` · +${fmtTotal(sum)}` : "")
+    : "0 selecionadas";
+  const add = $("modal-add");
+  add.disabled = !n;
+  add.textContent = n ? `Adicionar ${n} música${n > 1 ? "s" : ""}` : "Adicionar";
+}
+
+function drawModalTable() {
+  const box = $("modal-table");
+  const all = modalCandidates();
+  const q = $("modal-search").value.trim().toLowerCase();
+
+  if (!all.length) {
+    box.replaceChildren(el("p", { class: "empty" },
+      repertoire.length
+        ? "Todas as músicas do repertório já estão nesta set list."
+        : ["Nenhuma música ativa no repertório. ",
+           el("a", { href: "repertorio.html" }, "Cadastrar no Repertório")]));
+    return updateModalFooter();
   }
+
+  const list = all
+    .filter((s) => !q || s.title.toLowerCase().includes(q) || s.artist.toLowerCase().includes(q))
+    .sort((a, b) =>
+      modalSort.dir * a[modalSort.by].localeCompare(b[modalSort.by], "pt-BR", { sensitivity: "base" })
+      || a.title.localeCompare(b.title, "pt-BR", { sensitivity: "base" }));
+
+  if (!list.length) {
+    box.replaceChildren(el("p", { class: "empty" },
+      `Nada encontrado para "${$("modal-search").value.trim()}".`));
+    return updateModalFooter();
+  }
+
+  const setPicked = (id, on) => { on ? modalPicked.add(id) : modalPicked.delete(id); };
+
+  // checkbox mestre atua só sobre as linhas VISÍVEIS no filtro
+  const master = el("input", {
+    type: "checkbox", title: "Marcar/desmarcar as visíveis",
+    onchange: (e) => { list.forEach((s) => setPicked(s.id, e.target.checked)); drawModalTable(); },
+  });
+  const pickedVisible = list.filter((s) => modalPicked.has(s.id)).length;
+  master.checked = pickedVisible === list.length;
+  master.indeterminate = pickedVisible > 0 && pickedVisible < list.length;
+
+  const sortTh = (field, label) => el("th", {
+    class: "sortable", title: `Ordenar por ${label.toLowerCase()}`,
+    onclick: () => {
+      if (modalSort.by === field) modalSort.dir = -modalSort.dir;
+      else modalSort = { by: field, dir: 1 };
+      drawModalTable();
+    },
+  }, label, el("span", { class: "dir" },
+    modalSort.by === field ? (modalSort.dir === 1 ? " ▲" : " ▼") : ""));
+
+  box.replaceChildren(el("div", { class: "tblwrap" }, el("table", {},
+    el("thead", {}, el("tr", {},
+      el("th", { class: "checkth" }, master),
+      sortTh("title", "Música"),
+      sortTh("artist", "Artista"),
+      el("th", {}, "Energia"),
+      el("th", {}, "Duração"))),
+    el("tbody", {}, ...list.map((s, idx) => {
+      const cb = el("input", { type: "checkbox", id: "pick-" + s.id });
+      cb.checked = modalPicked.has(s.id);
+      cb.addEventListener("click", (e) => {
+        // shift+clique aplica o mesmo estado à faixa entre os dois cliques
+        if (e.shiftKey && lastPickIndex >= 0) {
+          const [a, b] = [Math.min(lastPickIndex, idx), Math.max(lastPickIndex, idx)];
+          for (let k = a; k <= b; k++) setPicked(list[k].id, e.target.checked);
+        } else {
+          setPicked(s.id, e.target.checked);
+        }
+        lastPickIndex = idx;
+        drawModalTable();
+      });
+      const tr = el("tr", { style: "cursor:pointer" },
+        el("td", {}, cb),
+        el("td", {}, el("label", { for: cb.id, style: "font-size:15px;color:var(--ink);cursor:pointer" },
+          el("b", {}, s.title))),
+        el("td", {}, s.artist),
+        el("td", {}, energySpan(s.energy)),
+        el("td", {}, fmtDur(s.duration_sec) || el("span", { class: "muted" }, "—")));
+      // linha inteira clicável (fora do checkbox e do label, que já alternam)
+      tr.addEventListener("click", (e) => {
+        if (e.target === cb || e.target.closest("label")) return;
+        setPicked(s.id, !cb.checked);
+        lastPickIndex = idx;
+        drawModalTable();
+      });
+      return tr;
+    })))));
+  updateModalFooter();
+}
+
+function openSongModal() {
+  modalPicked.clear();
+  lastPickIndex = -1;
+  $("modal-search").value = "";
+  drawModalTable();
+  savedScrollY = window.scrollY;
+  document.body.style.overflow = "hidden";
+  $("song-modal").hidden = false;
+  escHandler = (e) => { if (e.key === "Escape") closeSongModal(); };
+  document.addEventListener("keydown", escHandler);
+  // foco na busca só com mouse — no celular o teclado cobriria meia tela
+  if (matchMedia("(pointer: fine)").matches) $("modal-search").focus();
+}
+
+function closeSongModal() {
+  $("song-modal").hidden = true;
+  document.body.style.overflow = "";
+  window.scrollTo(0, savedScrollY);
+  document.removeEventListener("keydown", escHandler);
+  $("song-add-open").focus();
+}
+
+$("song-add-open").addEventListener("click", openSongModal);
+$("modal-close").addEventListener("click", closeSongModal);
+$("modal-cancel").addEventListener("click", closeSongModal);
+$("song-modal").addEventListener("click", (e) => {
+  if (e.target === $("song-modal")) closeSongModal();
+});
+$("modal-search").addEventListener("input", drawModalTable);
+
+$("modal-add").addEventListener("click", async () => {
+  const rows = [...modalPicked].map((songId, i) => ({
+    setlist_id: current.id, position: items.length + 1 + i, kind: "song", song_id: songId,
+  }));
+  if (!rows.length) return;
+  closeSongModal();
+  const { error } = await db.from("setlist_items").insert(rows);   // 1 request
+  if (error) {
+    show($("msg"), "Erro ao adicionar: " + error.message, "error");
+    return loadAll();
+  }
+  show($("msg"), `${rows.length} música(s) adicionada(s).`, "ok");
   await loadAll();
+});
+
+// ---------- intervalos ----------
+
+// 1 toque: entra com 15 min e sem rótulo; ajuste pelo ✎ da linha.
+$("int-add").addEventListener("click", async () => {
+  const { error } = await db.from("setlist_items").insert({
+    setlist_id: current.id, position: items.length + 1, kind: "interval",
+    duration_sec: 900, label: null,
+  });
+  if (error) return show($("msg"), "Erro ao adicionar intervalo: " + error.message, "error");
+  await loadAll();
+});
+
+// Edição inline (padrão editRow do repertório): rótulo + minutos com stepper.
+function editIntervalRow(tr, it) {
+  const lbl = el("input", { value: it.label ?? "", placeholder: "Intervalo" });
+  const num = el("input", { type: "number", min: "1", style: "width:70px",
+    value: String(Math.round(it.duration_sec / 60)) });
+  const step = (d) => { num.value = String(Math.max(1, (parseInt(num.value, 10) || 0) + d)); };
+  tr.replaceChildren(
+    el("td", { class: "draghandle" }, "⠿"),
+    el("td", { class: "mono" }, tr.children[1].textContent),
+    el("td", {}, lbl),
+    el("td", { colspan: "2" }, el("div", { class: "rowactions", style: "align-items:center" },
+      el("button", { class: "iconbtn", type: "button", title: "Menos 5 minutos", onclick: () => step(-5) }, "−5"),
+      num,
+      el("button", { class: "iconbtn", type: "button", title: "Mais 5 minutos", onclick: () => step(5) }, "+5"),
+    )),
+    el("td", { class: "muted" }, "min"),
+    el("td", {}, el("div", { class: "rowactions" },
+      el("button", {
+        class: "iconbtn", title: "Salvar",
+        onclick: async () => {
+          const min = parseInt(num.value, 10);
+          if (!min || min < 1) return show($("msg"), "Informe a duração do intervalo em minutos.", "error");
+          const { error } = await db.from("setlist_items")
+            .update({ label: lbl.value.trim() || null, duration_sec: min * 60 }).eq("id", it.id);
+          if (error) return show($("msg"), "Erro ao salvar o intervalo: " + error.message, "error");
+          await loadAll();
+        },
+      }, "✔"),
+      el("button", { class: "iconbtn", title: "Cancelar", onclick: () => renderItems() }, "✕"),
+    )),
+  );
+  lbl.focus();
 }
 
 // ---------- mapa de energia ----------
@@ -365,5 +638,5 @@ async function unlink(s) {
   await loadAll();
 }
 
-// Carga inicial no fim do módulo (todo o estado acima já inicializado).
+// Carga inicial no fim do módulo (todo o estado acima já inicializado — TDZ).
 await loadAll();

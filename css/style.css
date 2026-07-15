@@ -439,6 +439,43 @@ input[type="checkbox"] { accent-color: var(--accent); }
 .energy-dot { display: inline-block; width: 10px; height: 10px;
   border-radius: 50%; margin-right: 6px; vertical-align: baseline; }
 tr.interval-row td { color: var(--muted); }
+
+/* ---------- modal (overlay + cartão; 1º uso: picker de músicas das Set Lists) ---------- */
+.modal-overlay { position: fixed; inset: 0; z-index: 50;
+  background: rgba(14, 8, 18, 0.72); backdrop-filter: blur(2px);
+  display: flex; align-items: center; justify-content: center; padding: 20px;
+  overscroll-behavior: contain; }
+.modal-overlay[hidden] { display: none; }
+.modal { background: var(--bg-raised); border: 1px solid var(--line);
+  border-radius: 14px; box-shadow: 0 18px 50px rgba(0, 0, 0, 0.5);
+  width: min(680px, 100%); max-height: min(84vh, 720px); max-height: min(84dvh, 720px);
+  display: flex; flex-direction: column; }
+.modal header { display: flex; align-items: center; gap: 12px; padding: 16px 20px 8px; }
+.modal header h3 { margin: 0; flex: 1; }
+.modal .modal-body { padding: 0 20px; overflow-y: auto; flex: 1; }
+.modal .modal-body input[type="search"] { width: 100%; font-size: 16px; } /* 16px: iOS não dá zoom */
+.modal footer { display: flex; align-items: center; gap: 12px; padding: 12px 20px 16px;
+  border-top: 1px solid var(--line); }
+.modal footer .grow { flex: 1; }
+/* celular: folha ancorada embaixo — botões na zona do polegar */
+@media (max-width: 640px) {
+  .modal-overlay { padding: 0; align-items: flex-end; }
+  .modal { width: 100%; max-height: 92dvh; border-radius: 14px 14px 0 0;
+    border-left: none; border-right: none; border-bottom: none; }
+  .modal footer { padding-bottom: max(16px, env(safe-area-inset-bottom)); }
+}
+
+/* set lists: arrastar pelo puxador + resumo fixo no topo do scroll */
+td.draghandle { cursor: grab; touch-action: none; user-select: none;
+  color: var(--muted); width: 34px; }
+tr.dragging { opacity: 0.5; pointer-events: none; }
+tr.drop-target td { border-top: 2px solid var(--accent); }
+#sl-stats { position: sticky; top: 0; z-index: 5; background: var(--bg); }
+/* alvos de toque confortáveis no celular (vale para todo o backstage) */
+@media (pointer: coarse) {
+  .iconbtn { min-width: 44px; min-height: 44px; font-size: 16px; }
+  .btn { min-height: 44px; }
+}
 .voters { display: flex; gap: 8px; flex-wrap: wrap; margin: 10px 0; }
 .voters .tag.voted { border-color: var(--ok); color: var(--ok); }
 
