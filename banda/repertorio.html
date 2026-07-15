@@ -16,6 +16,7 @@
     <span class="badge">Backstage</span>
     <a href="repertorio.html" class="active">Repertório</a>
     <a href="shows.html">Shows</a>
+    <a href="setlists.html">Set Lists</a>
     <a href="candidatas.html">Candidatas</a>
     <a href="votacoes.html">Votações</a>
     <a href="perfil.html">Perfil</a>
@@ -33,8 +34,17 @@
       <div class="field grow"><label for="f-artist">Artista</label><input id="f-artist" required></div>
       <div class="field grow"><label for="f-spotify">Link do Spotify</label>
         <input id="f-spotify" type="url" placeholder="https://open.spotify.com/…"></div>
+      <div class="field"><label for="f-duration">Duração</label>
+        <input id="f-duration" placeholder="3:45" style="width:80px"></div>
+      <div class="field"><label for="f-energy">Energia</label>
+        <select id="f-energy" style="width:80px">
+          <option value="">—</option><option>1</option><option>2</option>
+          <option>3</option><option>4</option><option>5</option>
+        </select></div>
       <button class="btn" type="submit">Adicionar</button>
     </form>
+    <p class="muted" style="font-size:13px">Duração e energia (1=calma … 5=alta) alimentam as
+      <a href="setlists.html">Set Lists</a>: estimativa de duração do show e mapa de energia.</p>
     <div id="msg" class="notice" hidden></div>
 
     <div class="form-row">
@@ -50,7 +60,7 @@
 
     <div class="tblwrap">
       <table>
-        <thead><tr><th>Música</th><th>Artista</th><th>Spotify</th><th>Status</th><th></th></tr></thead>
+        <thead><tr><th>Música</th><th>Artista</th><th>Spotify</th><th>Duração</th><th>Energia</th><th>Status</th><th></th></tr></thead>
         <tbody id="rows"></tbody>
       </table>
     </div>

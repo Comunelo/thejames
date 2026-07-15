@@ -4,7 +4,8 @@ Site do **The James** (covers de classic rock e pop).
 
 - **Área pública**: home, repertório e agenda de shows.
 - **Backstage** (`/banda`, só integrantes): gestão do repertório, setlists de
-  shows, músicas candidatas e votações para escolher as próximas do repertório.
+  shows, set lists reutilizáveis (ordem, intervalos, mapa de energia e duração
+  estimada), músicas candidatas e votações para escolher as próximas do repertório.
 
 **Stack**: HTML/CSS/JS puro hospedado no GitHub Pages + [Supabase](https://supabase.com)
 (banco Postgres, login por usuário + senha e segurança via Row Level Security).
@@ -90,6 +91,12 @@ integrante em minúsculas e sem acentos, e a senha inicial é o telefone dele
   (empates na linha de corte também destacados). Nada entra no repertório
   automaticamente — a banda decide depois, à vista do resultado — e todas
   as candidatas voltam para a caixa de sugestões.
+- **Set Lists**: em **Set Lists**, monte listas reutilizáveis com as músicas do
+  repertório — ordem própria (↑/↓), intervalos com duração, mapa de energia
+  (barras âmbar, 1–5 por música) e duração total estimada. "Associar e aplicar"
+  grava a lista como setlist de um show (substitui a lista dele; impressão e
+  setlist pública continuam saindo da página Shows). Duração (m:ss) e energia
+  de cada música são cadastradas no Repertório do backstage.
 
 ## Estrutura
 
@@ -112,4 +119,6 @@ supabase/insert-musicas-faltantes.sql  músicas das setlists antigas (completa a
 supabase/seed-candidatas.sql        28 candidatas da planilha p/ a próxima votação
 supabase/ajuste-encerrar-so-admin.sql  só o admin encerra/apura votações
 supabase/ajuste-encerrar-sem-promover.sql  encerrar só publica o ranking (sem promoção ao repertório)
+supabase/criar-setlists.sql         Set Lists (tabelas, duração/energia em songs, shows.setlist_id)
+supabase/seed-duracao-energia.sql   estimativas de duração/energia das 31 músicas (opcional, editável)
 ```

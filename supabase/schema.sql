@@ -27,6 +27,8 @@ create table public.songs (
   title        text not null,
   artist       text not null,
   spotify_url  text,
+  duration_sec int check (duration_sec > 0),      -- duração estimada (segundos)
+  energy       int check (energy between 1 and 5), -- energia ao vivo (1=calma … 5=alta)
   status       text not null default 'ativa' check (status in ('ativa','aposentada')),
   from_poll_id uuid,
   added_at     timestamptz not null default now()
@@ -44,13 +46,45 @@ create table public.shows (
   created_at     timestamptz not null default now()
 );
 
--- Setlist de cada show (ordenada).
+-- Setlist de cada show (ordenada). É a lista "tocável"/pública do show;
+-- pode ser preenchida à mão ou aplicada a partir de uma set list (abaixo).
 create table public.show_songs (
   show_id  uuid not null references public.shows(id) on delete cascade,
   song_id  uuid not null references public.songs(id) on delete cascade,
   position int  not null,
   primary key (show_id, song_id)
 );
+
+-- Set lists reutilizáveis (independentes dos shows).
+create table public.setlists (
+  id         uuid primary key default gen_random_uuid(),
+  name       text not null,
+  notes      text,
+  created_by uuid references public.members(id) on delete set null,
+  created_at timestamptz not null default now()
+);
+
+-- Itens ordenados: música do repertório OU intervalo (com duração própria).
+create table public.setlist_items (
+  id           uuid primary key default gen_random_uuid(),
+  setlist_id   uuid not null references public.setlists(id) on delete cascade,
+  position     int  not null,
+  kind         text not null default 'song' check (kind in ('song','interval')),
+  song_id      uuid references public.songs(id) on delete cascade,
+  duration_sec int check (duration_sec > 0),  -- só para intervalos
+  label        text,                          -- ex.: "Intervalo"
+  check ((kind = 'song' and song_id is not null)
+      or (kind = 'interval' and song_id is null and duration_sec is not null))
+);
+
+-- Uma música só entra uma vez em cada set list.
+create unique index setlist_items_musica_unica
+  on public.setlist_items (setlist_id, song_id) where song_id is not null;
+
+-- Show aponta para a set list de origem (associar copia as músicas
+-- para show_songs; ver banda/setlists.html).
+alter table public.shows
+  add column setlist_id uuid references public.setlists(id) on delete set null;
 
 -- Músicas candidatas (caixa de sugestões).
 create table public.candidates (
@@ -349,6 +383,8 @@ alter table public.members         enable row level security;
 alter table public.songs           enable row level security;
 alter table public.shows           enable row level security;
 alter table public.show_songs      enable row level security;
+alter table public.setlists       enable row level security;
+alter table public.setlist_items  enable row level security;
 alter table public.candidates      enable row level security;
 alter table public.polls           enable row level security;
 alter table public.poll_candidates enable row level security;
@@ -394,6 +430,12 @@ create policy show_songs_member_update on public.show_songs
   for update using (public.is_member());
 create policy show_songs_member_delete on public.show_songs
   for delete using (public.is_member());
+
+-- set lists: internas — só integrantes.
+create policy setlists_member_all on public.setlists
+  for all using (public.is_member()) with check (public.is_member());
+create policy setlist_items_member_all on public.setlist_items
+  for all using (public.is_member()) with check (public.is_member());
 
 -- candidatas e votações: só integrantes.
 create policy candidates_member_all on public.candidates

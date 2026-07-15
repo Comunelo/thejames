@@ -27,7 +27,19 @@ Setup completo e passos pendentes: ver README.md.
   `ajuste-encerrar-so-admin.sql` (já rodado em produção) e
   `ajuste-encerrar-sem-promover.sql` (novo `close_poll(uuid)` sem promoção ao
   repertório e sem desempate — encerrar só publica o ranking; rodar ANTES do
-  deploy do front que o usa).
+  deploy do front que o usa),
+  `criar-setlists.sql` (Set Lists: tabelas `setlists`/`setlist_items`,
+  colunas `songs.duration_sec`/`songs.energy`, `shows.setlist_id`; rodar
+  ANTES do deploy do front que o usa) e
+  `seed-duracao-energia.sql` (estimativas opcionais de duração/energia).
+
+- Set Lists (`banda/setlists.html`): listas reutilizáveis do repertório com
+  ordem, intervalos, mapa de energia (rampa âmbar `.e1`–`.e5` no CSS) e
+  duração estimada. "Associar e aplicar" grava `shows.setlist_id` E copia as
+  músicas para `show_songs` (a página Shows, a impressão e a setlist pública
+  seguem lendo só `show_songs` — não mexer nisso sem re-sincronizar).
+  Duração/energia das músicas são editadas no Repertório do backstage
+  (helpers `fmtDur`/`parseDur` em `js/db.js`).
 
 - Ferramentas do backstage com mais de um contexto usam abas (`.tabs`/`.tab`,
   ver Votações e Shows); tabelas têm cabeçalhos ordenáveis (`th.sortable`).

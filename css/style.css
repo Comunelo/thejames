@@ -421,6 +421,24 @@ input[type="checkbox"] { accent-color: var(--accent); }
 .pollcard .votebar { height: 8px; background: linear-gradient(90deg, var(--violet-solid), var(--violet)); border-radius: 4px; }
 .pollcard .cand.top b { color: var(--accent); }
 .pollcard .cand.top .votebar { background: linear-gradient(90deg, var(--accent-solid), var(--accent)); }
+
+/* set lists: mapa de energia (rampa âmbar sequencial, 1=escura … 5=clara)
+   e indicador de energia nas tabelas */
+.energymap { display: flex; align-items: flex-end; gap: 2px; height: 76px;
+  padding: 8px 2px 0; border-bottom: 1px solid var(--line); }
+.energymap .ebar { flex: 1 1 0; max-width: 26px; min-width: 6px;
+  border-radius: 3px 3px 0 0; }
+.energymap .ebar.unknown { background: transparent;
+  border: 1px dashed var(--muted); border-bottom: none; }
+.energymap .ebar.interval { flex: 0 0 2px; min-width: 2px; height: 100%;
+  background: none; border-left: 2px dashed var(--muted);
+  border-radius: 0; margin: 0 4px; }
+.e1 { background: #8A5E14; } .e2 { background: #A06C18; }
+.e3 { background: #B98420; } .e4 { background: #D49C2C; }
+.e5 { background: #F0B43C; }
+.energy-dot { display: inline-block; width: 10px; height: 10px;
+  border-radius: 50%; margin-right: 6px; vertical-align: baseline; }
+tr.interval-row td { color: var(--muted); }
 .voters { display: flex; gap: 8px; flex-wrap: wrap; margin: 10px 0; }
 .voters .tag.voted { border-color: var(--ok); color: var(--ok); }
 

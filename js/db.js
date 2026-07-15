@@ -82,6 +82,23 @@ export function fmtDateTime(iso) {
     dt.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
 }
 
+// Duração de música: "3:45" ou "4" (minutos) -> segundos.
+// Vazio -> null; formato inválido -> NaN (o chamador avisa o usuário).
+export function parseDur(text) {
+  const t = (text ?? "").trim();
+  if (!t) return null;
+  const m = t.match(/^(\d{1,2}):([0-5]\d)$/);
+  if (m) return Number(m[1]) * 60 + Number(m[2]);
+  if (/^\d{1,3}$/.test(t)) return Number(t) * 60;
+  return NaN;
+}
+
+// 225 -> "3:45"; nulo/zero -> "".
+export function fmtDur(sec) {
+  if (!sec) return "";
+  return Math.floor(sec / 60) + ":" + String(sec % 60).padStart(2, "0");
+}
+
 export function spotifyAnchor(url) {
   if (!url) return el("span", { class: "muted" }, "—");
   return el("a", { class: "spotify", href: url, target: "_blank", rel: "noopener" }, "▶ Spotify");

@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Set Lists · Backstage · The James</title>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@500;600;700&family=Space+Mono&display=swap">
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body class="banda">
+  <div class="stripes"></div>
+  <nav class="site">
+    <a class="logo" href="index.html"><span>The</span> James</a>
+    <span class="badge">Backstage</span>
+    <a href="repertorio.html">Repertório</a>
+    <a href="shows.html">Shows</a>
+    <a href="setlists.html" class="active">Set Lists</a>
+    <a href="candidatas.html">Candidatas</a>
+    <a href="votacoes.html">Votações</a>
+    <a href="perfil.html">Perfil</a>
+    <a class="backlink" href="../index.html">&larr; Site p&uacute;blico</a>
+  </nav>
+  <div class="wrap">
+    <div class="banda-header"><h1>Set Lists</h1></div>
+    <p class="muted">Monte listas reutilizáveis com as músicas do repertório: ordem, intervalos,
+      mapa de energia e duração estimada. Depois associe cada lista a um show.</p>
+    <div id="msg" class="notice" hidden></div>
+
+    <div class="tabs" role="tablist">
+      <button type="button" class="tab" id="tab-btn-lists" role="tab">
+        Listas <span class="tabcount" id="count-lists">0</span></button>
+      <button type="button" class="tab" id="tab-btn-new" role="tab">+ Nova set list</button>
+    </div>
+
+    <section id="tab-lists" hidden>
+      <div id="setlist-list"></div>
+    </section>
+
+    <section id="tab-new" hidden>
+      <form id="add-form" class="form-row">
+        <div class="field grow"><label for="f-name">Nome</label>
+          <input id="f-name" required placeholder="Show padrão 2h, Casamento, Bar acústico…"></div>
+        <div class="field grow"><label for="f-notes">Notas</label>
+          <input id="f-notes" placeholder="opcional"></div>
+        <button class="btn" type="submit">Criar set list</button>
+      </form>
+      <p class="muted">Depois de criar, o editor abre aqui embaixo para montar a lista.</p>
+    </section>
+
+    <!-- Editor da set list selecionada -->
+    <section id="editor" hidden>
+      <h2 id="ed-title"></h2>
+      <form id="ed-form" class="form-row">
+        <div class="field grow"><label for="e-name">Nome</label><input id="e-name" required></div>
+        <div class="field grow"><label for="e-notes">Notas</label><input id="e-notes"></div>
+        <button class="btn ghost" type="submit">Salvar</button>
+        <button class="btn ghost small" type="button" id="e-dup">Duplicar</button>
+        <button class="btn danger small" type="button" id="e-delete">Excluir</button>
+      </form>
+
+      <h3>Músicas e intervalos</h3>
+      <div class="tblwrap">
+        <table>
+          <thead><tr><th>#</th><th>Música</th><th>Artista</th><th>Energia</th><th>Duração</th><th></th></tr></thead>
+          <tbody id="item-rows"></tbody>
+        </table>
+      </div>
+      <p class="muted" id="sl-summary"></p>
+
+      <div class="form-row">
+        <div class="field grow"><label for="song-pick">Adicionar do repertório</label>
+          <select id="song-pick"></select></div>
+        <button class="btn" type="button" id="song-add">Adicionar música</button>
+      </div>
+      <div class="form-row">
+        <div class="field"><label for="int-min">Intervalo (min)</label>
+          <input id="int-min" type="number" min="1" value="15" style="width:90px"></div>
+        <div class="field grow"><label for="int-label">Rótulo</label>
+          <input id="int-label" placeholder="Intervalo"></div>
+        <button class="btn ghost" type="button" id="int-add">Adicionar intervalo</button>
+      </div>
+
+      <h3>Mapa de energia</h3>
+      <div class="card">
+        <div id="energymap" class="energymap"></div>
+        <p class="muted" style="margin:8px 0 0;font-size:13px">
+          Uma barra por música, na ordem do show — quanto mais alta e clara, mais energia (1–5).
+          Barra tracejada = música sem energia cadastrada; divisória tracejada = intervalo.
+          Cadastre energia e duração no <a href="repertorio.html">Repertório</a>.</p>
+      </div>
+
+      <h3>Shows</h3>
+      <div id="show-links"></div>
+      <div class="form-row">
+        <div class="field grow"><label for="show-pick">Associar a um show</label>
+          <select id="show-pick"></select></div>
+        <button class="btn" type="button" id="show-assoc">Associar e aplicar</button>
+      </div>
+      <p class="muted" style="font-size:13px">Associar define esta set list como a setlist do show
+        e substitui a lista de músicas dele (intervalos não entram). Se você mudar a set list
+        depois, use “Reaplicar” no show correspondente.</p>
+    </section>
+  </div>
+  <script type="module" src="../js/banda-setlists.js"></script>
+</body>
+</html>
