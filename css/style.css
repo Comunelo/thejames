@@ -479,6 +479,74 @@ tr.drop-target td { border-top: 2px solid var(--accent); }
 .voters { display: flex; gap: 8px; flex-wrap: wrap; margin: 10px 0; }
 .voters .tag.voted { border-color: var(--ok); color: var(--ok); }
 
+/* ---------- agenda: calendário de disponibilidade ----------
+   Cores por tipo: show = âmbar (--accent), ensaio = verde (--ok);
+   --violet não serve aqui porque em body.banda ele é o mesmo âmbar. */
+.callegend { display: flex; gap: 6px 16px; flex-wrap: wrap; align-items: center;
+  margin: 12px 0 2px; font-size: 13px; color: var(--muted); }
+.callegend .sw { display: inline-block; width: 13px; height: 13px;
+  border-radius: 4px; margin-right: 6px; vertical-align: -2px;
+  border: 1px solid var(--line); background: var(--bg-raised); }
+.callegend .sw.mine { box-shadow: inset 0 0 0 2px var(--accent); }
+.callegend .sw.match-show { background: var(--accent); border-color: var(--accent); }
+.callegend .sw.match-ensaio { background: var(--ok); border-color: var(--ok); }
+.callegend .sw.risk { border: 2px dashed var(--danger); }
+.callegend .sw.out { background: transparent; border-style: dotted; }
+
+.calwrap { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 14px; margin: 14px 0; }
+.calmonth { margin: 0; }
+.calmonth h3 { margin: 0 0 10px; font-family: var(--font-mono); font-size: 12px;
+  letter-spacing: 0.2em; text-transform: uppercase; color: var(--accent); }
+.calgrid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+.calgrid .wd { font-family: var(--font-mono); font-size: 10px;
+  letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted);
+  text-align: center; padding: 2px 0; }
+
+.calday { position: relative; min-height: 38px;
+  display: flex; align-items: center; justify-content: center;
+  border: 1px solid transparent; border-radius: 6px;
+  font-size: 14px; font-variant-numeric: tabular-nums;
+  color: var(--muted); opacity: 0.35; }             /* padrão: não liberado */
+.calday.open { opacity: 1; color: var(--ink); background: var(--bg-raised);
+  border-color: var(--line); cursor: pointer; }
+.calday.open:hover { border-color: var(--accent); }
+.calday.past { opacity: 0.55; }
+.calday.mine { box-shadow: inset 0 0 0 2px var(--accent); }
+.calday.match-show { background: var(--accent); border-color: var(--accent);
+  color: var(--accent-ink); font-weight: 600; }
+.calday.match-ensaio { background: var(--ok); border-color: var(--ok);
+  color: #10200C; font-weight: 600; }
+.calday.match-show.mine, .calday.match-ensaio.mine {
+  box-shadow: inset 0 0 0 2px rgba(0, 0, 0, 0.35); }
+.calday.risk { border: 2px dashed var(--danger); }
+.calday.cancelled { text-decoration: line-through; }
+.calday.today { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+/* micro-barras de progresso (marcados/ativos): show em cima, ensaio embaixo */
+.calbars { position: absolute; left: 5px; right: 5px; bottom: 4px;
+  display: flex; flex-direction: column; gap: 2px; pointer-events: none; }
+.calbars i { display: block; height: 3px; border-radius: 2px; }
+.calbars .bshow { background: var(--accent); }
+.calbars .bensaio { background: var(--ok); }
+
+/* painel do dia (dentro do .modal) */
+.dayblock { border: 1px solid var(--line); border-radius: 10px;
+  padding: 12px 14px; margin: 12px 0; }
+.dayblock h4 { margin: 0 0 8px; font-family: var(--font-display); font-weight: 600;
+  font-size: 15px; letter-spacing: 0.06em; text-transform: uppercase;
+  display: flex; align-items: center; gap: 10px; }
+.dayblock.k-show h4 { color: var(--accent); }
+.dayblock.k-ensaio h4 { color: var(--ok); }
+.dayblock .avatars { display: flex; gap: 6px; flex-wrap: wrap; margin: 8px 0; }
+.avatar.sm { width: 30px; height: 30px; border-width: 2px; }
+.avatar-fallback.sm { font-size: 13px; }
+.matchbanner { border: 1px solid var(--ok);
+  background: color-mix(in srgb, var(--ok) 14%, transparent);
+  border-radius: 10px; padding: 10px 14px; margin: 12px 0; }
+
+@media (pointer: coarse) { .calday { min-height: 44px; } }
+
 footer.site {
   margin-top: 60px; padding: 24px 0; border-top: 1px solid var(--line);
   color: var(--muted); font-size: 13px; font-family: var(--font-mono);

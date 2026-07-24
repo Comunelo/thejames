@@ -33,7 +33,12 @@ Setup completo e passos pendentes: ver README.md.
   ANTES do deploy do front que o usa) e
   `seed-duracao-energia.sql` (estimativas opcionais de duração/energia) e
   `criar-setlist-encouracado.sql` (set list do show de 26/06/2026 criada da
-  setlist tocada + vínculo em `shows.setlist_id`).
+  setlist tocada + vínculo em `shows.setlist_id`) e
+  `criar-agenda-disponibilidade.sql` (Agenda: `members.is_active`, tabelas
+  `availability_windows`/`availability_marks`/`band_events` e funções
+  `set_availability`, `add/remove_availability_window`,
+  `promote_event_to_show`, `cancel/reopen_band_event`, `set_member_active`;
+  rodar ANTES do deploy do front que a usa).
 
 - Set Lists (`banda/setlists.html`): listas reutilizáveis do repertório com
   ordem, intervalos, mapa de energia (rampa âmbar `.e1`–`.e5` no CSS) e
@@ -43,6 +48,16 @@ Setup completo e passos pendentes: ver README.md.
   Duração/energia das músicas são editadas no Repertório do backstage
   (helpers `fmtDur`/`parseDur` em `js/db.js`).
 
+- Agenda (`banda/agenda.html`): calendário do semestre corrente (6 meses;
+  a partir de junho/dezembro o semestre seguinte aparece embaixo) só com as
+  datas que o admin liberou (`availability_windows`, sem sobreposição).
+  Cada integrante marca ensaio e/ou show por dia; quando TODOS os
+  `members.is_active` marcam o mesmo (dia, tipo), o banco cria o evento em
+  `band_events` (match detectado em `set_availability`/`eval_band_event`
+  com advisory lock — nunca no front). Desmarcar depois degrada o evento
+  para `em_risco`; evento de show confirmado é promovido pelo admin a show
+  real (`promote_event_to_show`, nasce `is_public=false`). Cores: show =
+  âmbar `--accent`, ensaio = verde `--ok` (CSS `.calday`/`.dayblock`).
 - Ferramentas do backstage com mais de um contexto usam abas (`.tabs`/`.tab`,
   ver Votações e Shows); tabelas têm cabeçalhos ordenáveis (`th.sortable`).
 - Em módulos ES com `await` no topo: a carga inicial fica no FIM do arquivo

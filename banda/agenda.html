@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Agenda · Backstage · The James</title>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@500;600;700&family=Space+Mono&display=swap">
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body class="banda">
+  <div class="stripes"></div>
+  <nav class="site">
+    <a class="logo" href="index.html"><span>The</span> James</a>
+    <span class="badge">Backstage</span>
+    <a href="repertorio.html">Repertório</a>
+    <a href="shows.html">Shows</a>
+    <a href="agenda.html" class="active">Agenda</a>
+    <a href="setlists.html">Set Lists</a>
+    <a href="candidatas.html">Candidatas</a>
+    <a href="votacoes.html">Votações</a>
+    <a href="perfil.html">Perfil</a>
+    <a class="backlink" href="../index.html">&larr; Site p&uacute;blico</a>
+  </nav>
+  <div class="wrap">
+    <div class="banda-header"><h1>Agenda</h1></div>
+    <p class="muted">O calendário mostra o semestre atual com as datas que o administrador liberou.
+      Marque os dias em que você topa ensaiar ou tocar — quando toda a banda marca o mesmo dia,
+      a data vira um evento confirmado.</p>
+    <div id="msg" class="notice" hidden></div>
+
+    <div class="statrow">
+      <div class="stat"><b id="st-waiting">—</b><span>datas esperando você</span></div>
+      <div class="stat"><b id="st-confirmed">—</b><span>eventos confirmados</span></div>
+      <div class="stat"><b id="st-next">—</b><span>próximo evento</span></div>
+    </div>
+
+    <div class="tabs" role="tablist">
+      <button type="button" class="tab" id="tab-btn-cal" role="tab">Calendário</button>
+      <button type="button" class="tab" id="tab-btn-events" role="tab">
+        Eventos <span class="tabcount" id="count-events">0</span></button>
+      <button type="button" class="tab" id="tab-btn-admin" role="tab" hidden>Admin</button>
+    </div>
+
+    <section id="tab-cal" hidden>
+      <div class="callegend" id="legend"></div>
+      <div class="calwrap" id="cal-grid"></div>
+    </section>
+
+    <section id="tab-events" hidden>
+      <div id="events-box"></div>
+    </section>
+
+    <section id="tab-admin" hidden>
+      <div id="admin-box"></div>
+    </section>
+  </div>
+
+  <!-- painel do dia / promoção a show -->
+  <div class="modal-overlay" id="overlay" hidden>
+    <div class="modal" role="dialog" aria-modal="true" id="modal"></div>
+  </div>
+
+  <script type="module" src="../js/banda-agenda.js"></script>
+</body>
+</html>

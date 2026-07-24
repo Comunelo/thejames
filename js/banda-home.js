@@ -48,12 +48,15 @@ async function renderDash(session) {
   $("logout").addEventListener("click", (e) => { e.preventDefault(); logout(); });
 
   const today = new Date().toLocaleDateString("en-CA");
-  const [member, songs, nextShow, polls] = await Promise.all([
+  const [member, songs, nextShow, polls, nextEvent, agMarks] = await Promise.all([
     db.from("members").select("name").eq("id", session.user.id).single(),
     db.from("songs").select("id", { count: "exact", head: true }).eq("status", "ativa"),
     db.from("shows").select("date, venue").gte("date", today)
       .order("date").limit(1).maybeSingle(),
     db.from("polls").select("id", { count: "exact", head: true }).eq("status", "aberta"),
+    db.from("band_events").select("day, kind").eq("status", "confirmado")
+      .gte("day", today).order("day").limit(1).maybeSingle(),
+    db.from("availability_marks").select("member_id, day, kind").gte("day", today),
   ]);
 
   const username = session.user.email.split("@")[0];
@@ -65,4 +68,19 @@ async function renderDash(session) {
   $("st-next").textContent = nextShow.data
     ? `${fmtDate(nextShow.data.date).slice(0, 5)} · ${nextShow.data.venue}`
     : "nada marcado";
+
+  // novidades da agenda: datas em que outros já marcaram e eu não
+  const marks = agMarks.data ?? [];
+  const mine = new Set(marks
+    .filter((k) => k.member_id === session.user.id).map((k) => k.day + "|" + k.kind));
+  const waiting = new Set(marks
+    .filter((k) => k.member_id !== session.user.id && !mine.has(k.day + "|" + k.kind))
+    .map((k) => k.day)).size;
+  const parts = [];
+  if (waiting) parts.push(waiting === 1
+    ? "1 data esperando você" : `${waiting} datas esperando você`);
+  if (nextEvent.data) {
+    parts.push(`próximo: ${fmtDate(nextEvent.data.day).slice(0, 5)} ${nextEvent.data.kind}`);
+  }
+  if (parts.length) $("agenda-news").textContent = parts.join(" · ");
 }
