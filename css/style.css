@@ -486,12 +486,30 @@ tr.drop-target td { border-top: 2px solid var(--accent); }
   margin: 12px 0 2px; font-size: 13px; color: var(--muted); }
 .callegend .sw { display: inline-block; width: 13px; height: 13px;
   border-radius: 4px; margin-right: 6px; vertical-align: -2px;
-  border: 1px solid var(--line); background: var(--bg-raised); }
+  border: 1px solid color-mix(in srgb, var(--accent) 45%, var(--line));
+  background: var(--bg-raised); }
 .callegend .sw.mine { box-shadow: inset 0 0 0 2px var(--accent); }
 .callegend .sw.match-show { background: var(--accent); border-color: var(--accent); }
 .callegend .sw.match-ensaio { background: var(--ok); border-color: var(--ok); }
 .callegend .sw.risk { border: 2px dashed var(--danger); }
-.callegend .sw.out { background: transparent; border-style: dotted; }
+.callegend .sw.out { border-color: transparent;
+  background: repeating-linear-gradient(135deg,
+    color-mix(in srgb, var(--muted) 30%, transparent) 0 1px,
+    transparent 1px 4px); }
+
+/* faixa dos próximos eventos confirmados, logo abaixo das estatísticas */
+.nextevents { display: flex; gap: 8px; flex-wrap: wrap; margin: 12px 0 4px; }
+.nextevents .nev { display: inline-flex; align-items: center; gap: 8px;
+  padding: 6px 12px; border: 1px solid var(--line); border-radius: 999px;
+  background: var(--bg-raised); color: var(--ink); font-size: 13px;
+  font-family: inherit; cursor: pointer; }
+.nextevents .nev:hover { border-color: var(--accent); }
+.nextevents .nev .dot { width: 9px; height: 9px; border-radius: 50%; }
+.nextevents .nev.show .dot { background: var(--accent); }
+.nextevents .nev.ensaio .dot { background: var(--ok); }
+.nextevents .nev b { font-family: var(--font-mono); font-size: 12px; }
+.nextevents .nev .k { text-transform: uppercase; letter-spacing: 0.06em;
+  font-size: 11px; color: var(--muted); }
 
 .calwrap { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 14px; margin: 14px 0; }
@@ -503,13 +521,18 @@ tr.drop-target td { border-top: 2px solid var(--accent); }
   letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted);
   text-align: center; padding: 2px 0; }
 
+/* padrão: não liberado — número apagado sobre hachura diagonal ("bloqueado") */
 .calday { position: relative; min-height: 38px;
   display: flex; align-items: center; justify-content: center;
   border: 1px solid transparent; border-radius: 6px;
   font-size: 14px; font-variant-numeric: tabular-nums;
-  color: var(--muted); opacity: 0.35; }             /* padrão: não liberado */
-.calday.open { opacity: 1; color: var(--ink); background: var(--bg-raised);
-  border-color: var(--line); cursor: pointer; }
+  color: color-mix(in srgb, var(--muted) 55%, transparent);
+  background: repeating-linear-gradient(135deg,
+    color-mix(in srgb, var(--muted) 14%, transparent) 0 1px,
+    transparent 1px 6px); }
+.calday.open { color: var(--ink); background: var(--bg-raised);
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--line));
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25); cursor: pointer; }
 .calday.open:hover { border-color: var(--accent); }
 .calday.past { opacity: 0.55; }
 .calday.mine { box-shadow: inset 0 0 0 2px var(--accent); }

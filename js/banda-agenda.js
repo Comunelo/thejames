@@ -98,8 +98,8 @@ function semesterMonths() {
 function renderLegend() {
   const sw = (cls, label) => el("span", {}, el("span", { class: "sw " + cls }), label);
   $("legend").replaceChildren(
-    sw("", "liberado"),
-    sw("out", "não liberado"),
+    sw("", "liberado para marcar"),
+    sw("out", "não liberado (bloqueado)"),
     sw("mine", "eu marquei"),
     sw("match-show", "show confirmado"),
     sw("match-ensaio", "ensaio confirmado"),
@@ -142,7 +142,8 @@ function dayCell(y, m, d) {
 
   const cell = el("div", {
     class: cls,
-    title: open ? "Ver o dia " + fmtDate(dayIso) : null,
+    title: open ? "Ver o dia " + fmtDate(dayIso)
+                : "Data não liberada pelo administrador",
     onclick: open ? () => renderDayPanel(dayIso) : null,
   }, String(d), bars.length ? el("span", { class: "calbars" }, ...bars) : null);
   return cell;
@@ -494,6 +495,19 @@ function renderStats() {
   $("st-next").textContent = future.length
     ? `${fmtDate(future[0].day).slice(0, 5)} · ${future[0].kind}`
     : "nada marcado";
+
+  // relação dos próximos 6 eventos já programados (clicar abre o dia)
+  const upcoming = future.slice(0, 6);
+  $("next-events").hidden = !upcoming.length;
+  $("next-events").replaceChildren(...upcoming.map((e) =>
+    el("button", {
+      type: "button", class: "nev " + e.kind,
+      title: "Ver o dia " + fmtDate(e.day),
+      onclick: () => renderDayPanel(e.day),
+    },
+      el("span", { class: "dot" }),
+      el("b", {}, `${DIAS_LONGOS[new Date(e.day + "T12:00:00").getDay()].slice(0, 3)} ${fmtDate(e.day).slice(0, 5)}`),
+      el("span", { class: "k" }, e.kind))));
 }
 
 // ---------- carga ----------
