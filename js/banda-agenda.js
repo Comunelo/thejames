@@ -204,8 +204,7 @@ function kindBlock(dayIso, kind, label, past) {
         ? el("span", { class: "tag", style: "border-color:var(--danger);color:var(--danger)" }, "em risco")
         : ev?.status === "cancelado"
           ? el("span", { class: "tag encerrada" }, "cancelado")
-          : el("span", { class: "mono muted" },
-              `${who.length} de ${activeMembers.length}`);
+          : null;
 
   return el("div", { class: "dayblock k-" + kind },
     el("h4", {},
