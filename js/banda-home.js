@@ -58,7 +58,6 @@ async function renderDash(session) {
       .gte("day", today).order("day").limit(6),
     db.from("availability_marks").select("member_id, day, kind").gte("day", today),
   ]);
-  const nextShow = { data: nextShows.data?.[0] ?? null };
   const nextEvent = { data: agEvents.data?.[0] ?? null };
 
   const username = session.user.email.split("@")[0];
@@ -67,9 +66,6 @@ async function renderDash(session) {
   document.querySelector("#dash .who").prepend(avatarEl(username, name));
   $("st-songs").textContent = songs.count ?? "—";
   $("st-polls").textContent = polls.count ?? "—";
-  $("st-next").textContent = nextShow.data
-    ? `${fmtDate(nextShow.data.date).slice(0, 5)} · ${nextShow.data.venue}`
-    : "nada marcado";
 
   // novidades da agenda: datas em que outros já marcaram e eu não
   const marks = agMarks.data ?? [];
