@@ -497,19 +497,24 @@ tr.drop-target td { border-top: 2px solid var(--accent); }
     color-mix(in srgb, var(--muted) 30%, transparent) 0 1px,
     transparent 1px 4px); }
 
-/* faixa dos próximos eventos confirmados, logo abaixo das estatísticas */
-.nextevents { display: flex; gap: 8px; flex-wrap: wrap; margin: 12px 0 4px; }
-.nextevents .nev { display: inline-flex; align-items: center; gap: 8px;
-  padding: 6px 12px; border: 1px solid var(--line); border-radius: 999px;
-  background: var(--bg-raised); color: var(--ink); font-size: 13px;
-  font-family: inherit; cursor: pointer; }
-.nextevents .nev:hover { border-color: var(--accent); }
-.nextevents .nev .dot { width: 9px; height: 9px; border-radius: 50%; }
-.nextevents .nev.show .dot { background: var(--accent); }
-.nextevents .nev.ensaio .dot { background: var(--ok); }
-.nextevents .nev b { font-family: var(--font-mono); font-size: 12px; }
-.nextevents .nev .k { text-transform: uppercase; letter-spacing: 0.06em;
-  font-size: 11px; color: var(--muted); }
+/* lista de próximos eventos (box da Agenda e card do dashboard):
+   ★ âmbar = show, ♪ verde = ensaio */
+.evlist { list-style: none; margin: 0; padding: 0; }
+.evlist li { display: flex; align-items: center; gap: 12px;
+  padding: 9px 2px; border-bottom: 1px solid var(--line); font-size: 14px; }
+.evlist li:last-child { border-bottom: 0; }
+.evlist li.link { cursor: pointer; }
+.evlist li.link:hover { background: var(--bg-raised); }
+.evicon { flex: none; width: 28px; height: 28px; border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 14px; line-height: 1; }
+.evicon.show { color: var(--accent); border: 1px solid var(--accent);
+  background: color-mix(in srgb, var(--accent) 16%, transparent); }
+.evicon.ensaio { color: var(--ok); border: 1px solid var(--ok);
+  background: color-mix(in srgb, var(--ok) 16%, transparent); }
+.evlist .d { font-family: var(--font-mono); font-size: 12.5px;
+  min-width: 96px; color: var(--ink); }
+.evlist .k { color: var(--muted); }
 
 .calwrap { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 14px; margin: 14px 0; }
@@ -553,14 +558,24 @@ tr.drop-target td { border-top: 2px solid var(--accent); }
 .calbars .bshow { background: var(--accent); }
 .calbars .bensaio { background: var(--ok); }
 
-/* painel do dia (dentro do .modal) */
-.dayblock { border: 1px solid var(--line); border-radius: 10px;
-  padding: 12px 14px; margin: 12px 0; }
+/* painel do dia (dentro do .modal): cada tipo com identidade forte —
+   show = âmbar ★, ensaio = verde ♪ (mesma simbologia da lista .evlist) */
+.dayblock { border: 1px solid var(--line); border-left-width: 4px;
+  border-radius: 10px; padding: 12px 14px; margin: 12px 0; }
 .dayblock h4 { margin: 0 0 8px; font-family: var(--font-display); font-weight: 600;
   font-size: 15px; letter-spacing: 0.06em; text-transform: uppercase;
   display: flex; align-items: center; gap: 10px; }
+.dayblock.k-show { border-color: color-mix(in srgb, var(--accent) 45%, var(--line));
+  border-left-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 7%, transparent); }
+.dayblock.k-ensaio { border-color: color-mix(in srgb, var(--ok) 45%, var(--line));
+  border-left-color: var(--ok);
+  background: color-mix(in srgb, var(--ok) 7%, transparent); }
 .dayblock.k-show h4 { color: var(--accent); }
 .dayblock.k-ensaio h4 { color: var(--ok); }
+/* o botão de marcar segue a cor do tipo (o .btn padrão já é âmbar = show) */
+.dayblock.k-ensaio .btn:not(.ghost) { background: var(--ok); color: #10200C; }
+.dayblock.k-ensaio .btn.ghost { border-color: var(--ok); }
 .dayblock .avatars { display: flex; gap: 6px; flex-wrap: wrap; margin: 8px 0; }
 .avatar.sm { width: 30px; height: 30px; border-width: 2px; }
 .avatar-fallback.sm { font-size: 13px; }

@@ -208,7 +208,9 @@ function kindBlock(dayIso, kind, label, past) {
               `${who.length} de ${activeMembers.length}`);
 
   return el("div", { class: "dayblock k-" + kind },
-    el("h4", {}, label, " ", statusTag),
+    el("h4", {},
+      el("span", { class: "evicon " + kind }, kind === "show" ? "★" : "♪"),
+      label, " ", statusTag),
     who.length
       ? el("div", { class: "avatars" }, ...who.map((m) =>
           el("span", { title: m.name }, avatarEl(m.username, m.name, "sm"))))
@@ -225,7 +227,7 @@ function kindBlock(dayIso, kind, label, past) {
         class: mine ? "btn small ghost" : "btn small",
         disabled: locked ? "" : null,
         onclick: () => toggle(dayIso, kind, !mine),
-      }, mine ? "Desmarcar" : "Estou dentro"),
+      }, mine ? "Desmarcar" : `Estou dentro para o ${kind}`),
       mine && ev?.show_id
         ? el("span", { class: "muted", style: "font-size:13px" },
             "Já virou show — fale com o admin para desmarcar.")
@@ -476,44 +478,29 @@ function renderAdmin() {
   );
 }
 
-// ---------- estatísticas ----------
-function renderStats() {
-  const myPairs = new Set(marks
-    .filter((k) => k.member_id === myId).map((k) => k.day + "|" + k.kind));
-  const activeIds = new Set(activeMembers.map((m) => m.id));
-  const waiting = new Set(marks
-    .filter((k) => k.day >= todayIso && k.member_id !== myId
-      && activeIds.has(k.member_id) && !myPairs.has(k.day + "|" + k.kind)
-      && inWindow(k.day))
-    .map((k) => k.day));
-  $("st-waiting").textContent = waiting.size;
-
+// ---------- próximos eventos ----------
+function renderNextEvents() {
   const future = events
     .filter((e) => e.status === "confirmado" && e.day >= todayIso)
     .sort((a, b) => a.day.localeCompare(b.day));
-  $("st-confirmed").textContent = future.length;
-  $("st-next").textContent = future.length
-    ? `${fmtDate(future[0].day).slice(0, 5)} · ${future[0].kind}`
-    : "nada marcado";
-
-  // relação dos próximos 6 eventos já programados (clicar abre o dia)
-  const upcoming = future.slice(0, 6);
-  $("next-events").hidden = !upcoming.length;
-  $("next-events").replaceChildren(...upcoming.map((e) =>
-    el("button", {
-      type: "button", class: "nev " + e.kind,
-      title: "Ver o dia " + fmtDate(e.day),
-      onclick: () => renderDayPanel(e.day),
-    },
-      el("span", { class: "dot" }),
-      el("b", {}, `${DIAS_LONGOS[new Date(e.day + "T12:00:00").getDay()].slice(0, 3)} ${fmtDate(e.day).slice(0, 5)}`),
-      el("span", { class: "k" }, e.kind))));
+  $("next-events").replaceChildren(...(future.length
+    ? future.map((e) => el("li", {
+        class: "link",
+        title: "Ver o dia " + fmtDate(e.day),
+        onclick: () => renderDayPanel(e.day),
+      },
+        el("span", { class: "evicon " + e.kind }, e.kind === "show" ? "★" : "♪"),
+        el("span", { class: "d" },
+          `${DIAS_LONGOS[new Date(e.day + "T12:00:00").getDay()].slice(0, 3)} ${fmtDate(e.day)}`),
+        el("span", { class: "k" }, e.kind === "show" ? "Show" : "Ensaio")))
+    : [el("li", { class: "empty" },
+        "Nada agendado ainda — marque seus dias no calendário.")]));
 }
 
 // ---------- carga ----------
 async function refresh() {
   await loadData();
-  renderStats();
+  renderNextEvents();
   renderLegend();
   renderCalendar();
   renderEvents();

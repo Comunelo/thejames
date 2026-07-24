@@ -1,5 +1,5 @@
 // Backstage: login por usuário + senha e dashboard com resumo da banda.
-import { db, configured, logout, show, fmtDate, avatarEl } from "./db.js";
+import { db, configured, logout, el, show, fmtDate, avatarEl } from "./db.js";
 
 const $ = (id) => document.getElementById(id);
 
@@ -48,16 +48,18 @@ async function renderDash(session) {
   $("logout").addEventListener("click", (e) => { e.preventDefault(); logout(); });
 
   const today = new Date().toLocaleDateString("en-CA");
-  const [member, songs, nextShow, polls, nextEvent, agMarks] = await Promise.all([
+  const [member, songs, nextShows, polls, agEvents, agMarks] = await Promise.all([
     db.from("members").select("name").eq("id", session.user.id).single(),
     db.from("songs").select("id", { count: "exact", head: true }).eq("status", "ativa"),
     db.from("shows").select("date, venue").gte("date", today)
-      .order("date").limit(1).maybeSingle(),
+      .order("date").limit(6),
     db.from("polls").select("id", { count: "exact", head: true }).eq("status", "aberta"),
-    db.from("band_events").select("day, kind").eq("status", "confirmado")
-      .gte("day", today).order("day").limit(1).maybeSingle(),
+    db.from("band_events").select("day, kind, show_id").eq("status", "confirmado")
+      .gte("day", today).order("day").limit(6),
     db.from("availability_marks").select("member_id, day, kind").gte("day", today),
   ]);
+  const nextShow = { data: nextShows.data?.[0] ?? null };
+  const nextEvent = { data: agEvents.data?.[0] ?? null };
 
   const username = session.user.email.split("@")[0];
   const name = member.data?.name ?? username;
@@ -83,4 +85,24 @@ async function renderDash(session) {
     parts.push(`próximo: ${fmtDate(nextEvent.data.day).slice(0, 5)} ${nextEvent.data.kind}`);
   }
   if (parts.length) $("agenda-news").textContent = parts.join(" · ");
+
+  // próximos 6 eventos (shows reais + eventos da agenda): ★ show, ♪ ensaio.
+  // Evento já promovido a show (show_id) sai da lista — o show real cobre.
+  const DIAS = ["dom", "seg", "ter", "qua", "qui", "sex", "sáb"];
+  const upcoming = [
+    ...(nextShows.data ?? []).map((s) => ({
+      day: s.date, kind: "show", label: s.venue, href: "shows.html" })),
+    ...(agEvents.data ?? []).filter((e) => !e.show_id).map((e) => ({
+      day: e.day, kind: e.kind,
+      label: e.kind === "show" ? "Show" : "Ensaio", href: "agenda.html" })),
+  ].sort((a, b) => a.day.localeCompare(b.day)).slice(0, 6);
+  if (upcoming.length) {
+    $("next-box").hidden = false;
+    $("next-list").replaceChildren(...upcoming.map((ev) =>
+      el("li", { class: "link", onclick: () => { location.href = ev.href; } },
+        el("span", { class: "evicon " + ev.kind }, ev.kind === "show" ? "★" : "♪"),
+        el("span", { class: "d" },
+          `${DIAS[new Date(ev.day + "T12:00:00").getDay()]} ${fmtDate(ev.day)}`),
+        el("span", { class: "k" }, ev.label))));
+  }
 }
