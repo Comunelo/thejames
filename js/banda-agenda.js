@@ -98,6 +98,7 @@ function semesterMonths() {
 function renderLegend() {
   const sw = (cls, label) => el("span", {}, el("span", { class: "sw " + cls }), label);
   $("legend").replaceChildren(
+    sw("today", "hoje"),
     sw("", "liberado para marcar"),
     sw("out", "não liberado (bloqueado)"),
     sw("mine", "eu marquei"),

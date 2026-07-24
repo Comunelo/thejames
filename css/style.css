@@ -492,6 +492,8 @@ tr.drop-target td { border-top: 2px solid var(--accent); }
 .callegend .sw.match-show { background: var(--accent); border-color: var(--accent); }
 .callegend .sw.match-ensaio { background: var(--ok); border-color: var(--ok); }
 .callegend .sw.risk { border: 2px dashed var(--danger); }
+.callegend .sw.today { background: #FFFDF4; border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent); }
 .callegend .sw.out { border-color: transparent;
   background: repeating-linear-gradient(135deg,
     color-mix(in srgb, var(--muted) 30%, transparent) 0 1px,
@@ -550,6 +552,12 @@ tr.drop-target td { border-top: 2px solid var(--accent); }
 .calday.risk { border: 2px dashed var(--danger); }
 .calday.cancelled { text-decoration: line-through; }
 .calday.today { outline: 2px solid var(--accent); outline-offset: 1px; }
+/* hoje: box branco preenchido (o preenchimento de match, se houver, prevalece;
+   a borda vermelha de "em risco" também) */
+.calday.today:not(.match-show):not(.match-ensaio) {
+  background: #FFFDF4; color: #201607; font-weight: 700; }
+.calday.today:not(.match-show):not(.match-ensaio):not(.risk) {
+  border-color: var(--accent); }
 
 /* micro-barras de progresso (marcados/ativos): show em cima, ensaio embaixo */
 .calbars { position: absolute; left: 5px; right: 5px; bottom: 4px;
