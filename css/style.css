@@ -484,16 +484,19 @@ tr.drop-target td { border-top: 2px solid var(--accent); }
    --violet não serve aqui porque em body.banda ele é o mesmo âmbar. */
 .callegend { display: flex; gap: 6px 16px; flex-wrap: wrap; align-items: center;
   margin: 12px 0 2px; font-size: 13px; color: var(--muted); }
-.callegend .sw { display: inline-block; width: 13px; height: 13px;
+.callegend .sw { display: inline-flex; align-items: center; justify-content: center;
+  width: 13px; height: 13px; font-size: 9px; line-height: 1;
   border-radius: 4px; margin-right: 6px; vertical-align: -2px;
   border: 1px solid color-mix(in srgb, var(--accent) 45%, var(--line));
   background: var(--bg-raised); }
 .callegend .sw.mine { box-shadow: inset 0 0 0 2px var(--accent); }
-.callegend .sw.match-show { background: var(--accent); border-color: var(--accent); }
+.callegend .sw.match-show { background: var(--accent); border-color: var(--accent);
+  color: var(--accent-ink); }
 .callegend .sw.match-show.possible {
   background: color-mix(in srgb, var(--accent) 18%, transparent);
-  border: 2px solid var(--accent); }
-.callegend .sw.match-ensaio { background: var(--ok); border-color: var(--ok); }
+  border: 2px solid var(--accent); color: var(--accent); }
+.callegend .sw.match-ensaio { background: var(--ok); border-color: var(--ok);
+  color: #10200C; }
 .callegend .sw.risk { border: 2px dashed var(--danger); }
 .callegend .sw.today { background: #FFFDF4; border-color: var(--accent);
   box-shadow: 0 0 0 1px var(--accent); }
@@ -553,12 +556,23 @@ tr.drop-target td { border-top: 2px solid var(--accent); }
   color: #10200C; font-weight: 600; }
 .calday.match-show.mine, .calday.match-ensaio.mine {
   box-shadow: inset 0 0 0 2px rgba(0, 0, 0, 0.35); }
+/* show confirmado acende como marquise — a possibilidade não brilha */
+.calday.match-show:not(.possible) {
+  box-shadow: 0 0 9px color-mix(in srgb, var(--accent) 60%, transparent); }
+.calday.match-show:not(.possible).mine {
+  box-shadow: inset 0 0 0 2px rgba(0, 0, 0, 0.35),
+    0 0 9px color-mix(in srgb, var(--accent) 60%, transparent); }
 /* possível show: âmbar em contorno — o preenchimento sólido fica
    reservado ao show confirmado pelo admin (band_events.show_id) */
 .calday.match-show.possible {
   background: color-mix(in srgb, var(--accent) 18%, transparent);
   border: 2px solid var(--accent); color: var(--accent); font-weight: 600; }
 .calday.match-show.possible.mine { box-shadow: inset 0 0 0 2px var(--accent); }
+/* selo do evento no canto da célula (mesma simbologia da .evlist):
+   ☆ possível show, ★ show confirmado, ♪ ensaio — cor herdada do dia */
+.calday .calstar { position: absolute; top: 1px; right: 3px;
+  font-size: 10px; line-height: 1; pointer-events: none; }
+@media (pointer: coarse) { .calday .calstar { font-size: 12px; top: 2px; } }
 /* tag âmbar contornada dos estados "possível show" (modal e aba Eventos) */
 .tag.poss { border-color: var(--accent); color: var(--accent); }
 .calday.risk { border: 2px dashed var(--danger); }

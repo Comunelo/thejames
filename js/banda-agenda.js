@@ -106,15 +106,16 @@ function semesterMonths() {
 
 // ---------- calendário ----------
 function renderLegend() {
-  const sw = (cls, label) => el("span", {}, el("span", { class: "sw " + cls }), label);
+  const sw = (cls, label, glyph) =>
+    el("span", {}, el("span", { class: "sw " + cls }, glyph ?? null), label);
   $("legend").replaceChildren(
     sw("today", "hoje"),
     sw("", "liberado para marcar"),
     sw("out", "não liberado (bloqueado)"),
     sw("mine", "eu marquei"),
-    sw("match-show possible", "possível show (banda toda topou)"),
-    sw("match-show", "show confirmado"),
-    sw("match-ensaio", "ensaio confirmado"),
+    sw("match-show possible", "possível show (banda toda topou)", "☆"),
+    sw("match-show", "show confirmado", "★"),
+    sw("match-ensaio", "ensaio confirmado", "♪"),
     sw("risk", "em risco"),
   );
 }
@@ -153,12 +154,19 @@ function dayCell(y, m, d) {
     }
   }
 
+  // selo do evento no canto: ☆ possível show, ★ show confirmado, ♪ ensaio
+  const star = evShow?.status === "confirmado"
+    ? el("span", { class: "calstar" }, evShow.show_id ? "★" : "☆")
+    : evEnsaio?.status === "confirmado"
+      ? el("span", { class: "calstar" }, "♪")
+      : null;
+
   const cell = el("div", {
     class: cls,
     title: open ? "Ver o dia " + fmtDate(dayIso)
                 : "Data não liberada pelo administrador",
     onclick: open ? () => renderDayPanel(dayIso) : null,
-  }, String(d), bars.length ? el("span", { class: "calbars" }, ...bars) : null);
+  }, String(d), star, bars.length ? el("span", { class: "calbars" }, ...bars) : null);
   return cell;
 }
 
