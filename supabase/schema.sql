@@ -155,8 +155,10 @@ create table public.availability_marks (
   primary key (member_id, day, kind)
 );
 
--- Eventos nascidos de match (um por dia e tipo). Só viram show de
--- verdade na promoção pelo admin (promote_event_to_show).
+-- Eventos nascidos de match (um por dia e tipo). Para kind='show',
+-- o match é só POSSÍVEL show (status='confirmado' + show_id NULL);
+-- o show é confirmado pelo admin via promote_event_to_show (grava
+-- show_id). Excluir o show devolve o dia a possível show (FK set null).
 create table public.band_events (
   id         uuid primary key default gen_random_uuid(),
   day        date not null,
@@ -167,6 +169,12 @@ create table public.band_events (
   created_at timestamptz not null default now(),
   unique (day, kind)
 );
+
+comment on table public.band_events is
+  'Eventos nascidos do consenso da agenda. Para kind=''show'', status=''confirmado'' + show_id NULL = POSSÍVEL show (banda toda topou, casa não fechada); show_id preenchido = show confirmado (promote_event_to_show). Para kind=''ensaio'', confirmado = confirmado mesmo.';
+
+comment on column public.band_events.show_id is
+  'NULL em evento de show = ainda é só possibilidade; preenchido = show confirmado pelo admin. FK on delete set null: excluir o show devolve o dia a possível show.';
 
 -- ---------- FUNÇÕES AUXILIARES ----------
 
@@ -562,7 +570,7 @@ begin
   delete from public.availability_windows where id = p_window_id;
 end $$;
 
--- Eventos (admin): promover a show, cancelar, reabrir.
+-- Eventos (admin): confirmar show (promover), cancelar, reabrir.
 create or replace function public.promote_event_to_show(
   p_event_id uuid, p_venue text, p_city text, p_notes text default null
 ) returns uuid language plpgsql security definer set search_path = public as $$
@@ -571,16 +579,16 @@ declare
   v_show_id uuid;
 begin
   if not exists (select 1 from public.members where id = auth.uid() and is_admin) then
-    raise exception 'Só o administrador promove eventos a show.';
+    raise exception 'Só o administrador confirma shows.';
   end if;
   select * into v_event from public.band_events where id = p_event_id for update;
   if v_event.id is null then raise exception 'Evento não encontrado.'; end if;
   if v_event.kind <> 'show' then
-    raise exception 'Só eventos do tipo show viram show — ensaios ficam na agenda.';
+    raise exception 'Só possibilidades de show são confirmadas — ensaios ficam na agenda.';
   end if;
-  if v_event.show_id is not null then raise exception 'Este evento já virou show.'; end if;
+  if v_event.show_id is not null then raise exception 'Este show já foi confirmado.'; end if;
   if v_event.status <> 'confirmado' then
-    raise exception 'Só eventos confirmados viram show.';
+    raise exception 'Só possibilidades fechadas por toda a banda viram show confirmado.';
   end if;
   if coalesce(trim(p_venue), '') = '' or coalesce(trim(p_city), '') = '' then
     raise exception 'Informe local e cidade do show.';

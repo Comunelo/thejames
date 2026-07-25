@@ -490,6 +490,9 @@ tr.drop-target td { border-top: 2px solid var(--accent); }
   background: var(--bg-raised); }
 .callegend .sw.mine { box-shadow: inset 0 0 0 2px var(--accent); }
 .callegend .sw.match-show { background: var(--accent); border-color: var(--accent); }
+.callegend .sw.match-show.possible {
+  background: color-mix(in srgb, var(--accent) 18%, transparent);
+  border: 2px solid var(--accent); }
 .callegend .sw.match-ensaio { background: var(--ok); border-color: var(--ok); }
 .callegend .sw.risk { border: 2px dashed var(--danger); }
 .callegend .sw.today { background: #FFFDF4; border-color: var(--accent);
@@ -500,7 +503,7 @@ tr.drop-target td { border-top: 2px solid var(--accent); }
     transparent 1px 4px); }
 
 /* lista de próximos eventos (box da Agenda e card do dashboard):
-   ★ âmbar = show, ♪ verde = ensaio */
+   ★ âmbar = show confirmado, ☆ vazada = possível show, ♪ verde = ensaio */
 .evlist { list-style: none; margin: 0; padding: 0; }
 .evlist li { display: flex; align-items: center; gap: 12px;
   padding: 9px 2px; border-bottom: 1px solid var(--line); font-size: 14px; }
@@ -512,6 +515,7 @@ tr.drop-target td { border-top: 2px solid var(--accent); }
   font-size: 14px; line-height: 1; }
 .evicon.show { color: var(--accent); border: 1px solid var(--accent);
   background: color-mix(in srgb, var(--accent) 16%, transparent); }
+.evicon.show.poss { background: transparent; }
 .evicon.ensaio { color: var(--ok); border: 1px solid var(--ok);
   background: color-mix(in srgb, var(--ok) 16%, transparent); }
 .evlist .d { font-family: var(--font-mono); font-size: 12.5px;
@@ -549,6 +553,14 @@ tr.drop-target td { border-top: 2px solid var(--accent); }
   color: #10200C; font-weight: 600; }
 .calday.match-show.mine, .calday.match-ensaio.mine {
   box-shadow: inset 0 0 0 2px rgba(0, 0, 0, 0.35); }
+/* possível show: âmbar em contorno — o preenchimento sólido fica
+   reservado ao show confirmado pelo admin (band_events.show_id) */
+.calday.match-show.possible {
+  background: color-mix(in srgb, var(--accent) 18%, transparent);
+  border: 2px solid var(--accent); color: var(--accent); font-weight: 600; }
+.calday.match-show.possible.mine { box-shadow: inset 0 0 0 2px var(--accent); }
+/* tag âmbar contornada dos estados "possível show" (modal e aba Eventos) */
+.tag.poss { border-color: var(--accent); color: var(--accent); }
 .calday.risk { border: 2px dashed var(--danger); }
 .calday.cancelled { text-decoration: line-through; }
 .calday.today { outline: 2px solid var(--accent); outline-offset: 1px; }

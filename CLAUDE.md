@@ -38,7 +38,10 @@ Setup completo e passos pendentes: ver README.md.
   `availability_windows`/`availability_marks`/`band_events` e funções
   `set_availability`, `add/remove_availability_window`,
   `promote_event_to_show`, `cancel/reopen_band_event`, `set_member_active`;
-  rodar ANTES do deploy do front que a usa).
+  rodar ANTES do deploy do front que a usa) e
+  `ajuste-possivel-show.sql` (comentários de catálogo + mensagens de
+  `promote_event_to_show` na nomenclatura "possível show"; sem mudança de
+  lógica — rodar ANTES do deploy do front que o usa).
 
 - Set Lists (`banda/setlists.html`): listas reutilizáveis do repertório com
   ordem, intervalos, mapa de energia (rampa âmbar `.e1`–`.e5` no CSS) e
@@ -54,10 +57,15 @@ Setup completo e passos pendentes: ver README.md.
   Cada integrante marca ensaio e/ou show por dia; quando TODOS os
   `members.is_active` marcam o mesmo (dia, tipo), o banco cria o evento em
   `band_events` (match detectado em `set_availability`/`eval_band_event`
-  com advisory lock — nunca no front). Desmarcar depois degrada o evento
-  para `em_risco`; evento de show confirmado é promovido pelo admin a show
-  real (`promote_event_to_show`, nasce `is_public=false`). Cores: show =
-  âmbar `--accent`, ensaio = verde `--ok` (CSS `.calday`/`.dayblock`).
+  com advisory lock — nunca no front). Para ensaio isso é confirmação; para
+  show é só **possível show** (convenção: `status='confirmado'` + `show_id`
+  NULL, documentada em `ajuste-possivel-show.sql`) — o show é confirmado
+  pelo admin via `promote_event_to_show` (grava `show_id`, nasce
+  `is_public=false`), e excluir o show regride o dia a possível show (FK
+  `on delete set null`). Desmarcar antes de confirmar degrada o evento para
+  `em_risco`. Cores: show confirmado = âmbar sólido ★, possível show =
+  âmbar contornado ☆ (`.calday.match-show.possible`, `.tag.poss`,
+  `.evicon.show.poss`), ensaio = verde ♪ (CSS `.calday`/`.dayblock`).
 - Ferramentas do backstage com mais de um contexto usam abas (`.tabs`/`.tab`,
   ver Votações e Shows); tabelas têm cabeçalhos ordenáveis (`th.sortable`).
 - Em módulos ES com `await` no topo: a carga inicial fica no FIM do arquivo

@@ -20,6 +20,16 @@ const KINDS = [
   { kind: "ensaio", label: "Ensaio" },
 ];
 
+// Convenção (ver supabase/ajuste-possivel-show.sql): evento de show com
+// status "confirmado" mas sem show_id ainda é só POSSIBILIDADE de show —
+// o show real só existe quando o admin confirma (promote_event_to_show).
+const isPossivel = (ev) =>
+  ev?.kind === "show" && ev?.status === "confirmado" && !ev?.show_id;
+const statusLabel = (ev) =>
+  ev.status === "confirmado"
+    ? (ev.kind === "show" ? (ev.show_id ? "show confirmado" : "possível show") : "confirmado")
+    : ev.status === "em_risco" ? "em risco" : "cancelado";
+
 let windows = [];
 let marks = [];
 let events = [];
@@ -48,7 +58,7 @@ async function loadData() {
   const [w, mk, ev, mb] = await Promise.all([
     db.from("availability_windows").select("*").order("start_date"),
     db.from("availability_marks").select("member_id, day, kind"),
-    db.from("band_events").select("*").order("day"),
+    db.from("band_events").select("*, show:shows(venue, city)").order("day"),
     db.from("members").select("id, username, name, instrument, is_active, is_admin").order("name"),
   ]);
   windows = w.data ?? [];
@@ -102,6 +112,7 @@ function renderLegend() {
     sw("", "liberado para marcar"),
     sw("out", "não liberado (bloqueado)"),
     sw("mine", "eu marquei"),
+    sw("match-show possible", "possível show (banda toda topou)"),
     sw("match-show", "show confirmado"),
     sw("match-ensaio", "ensaio confirmado"),
     sw("risk", "em risco"),
@@ -119,7 +130,8 @@ function dayCell(y, m, d) {
   if (open) cls += " open";
   if (past) cls += " past";
   if (iMarked(dayIso, "show") || iMarked(dayIso, "ensaio")) cls += " mine";
-  if (evShow?.status === "confirmado") cls += " match-show";
+  if (evShow?.status === "confirmado")
+    cls += evShow.show_id ? " match-show" : " match-show possible";
   else if (evEnsaio?.status === "confirmado") cls += " match-ensaio";
   if (evShow?.status === "em_risco" || evEnsaio?.status === "em_risco") cls += " risk";
   if ((evShow?.status === "cancelado" || evEnsaio?.status === "cancelado")
@@ -200,7 +212,12 @@ function kindBlock(dayIso, kind, label, past) {
 
   const statusTag =
     ev?.status === "confirmado"
-      ? el("span", { class: "tag aberta" }, ev.show_id ? "✔ virou show" : "✔ confirmado")
+      ? kind === "show"
+        ? ev.show_id
+          ? el("span", { class: "tag aberta" },
+              "★ show confirmado" + (ev.show?.venue ? " · " + ev.show.venue : ""))
+          : el("span", { class: "tag poss" }, "☆ possível show — falta fechar a casa")
+        : el("span", { class: "tag aberta" }, "✔ confirmado")
       : ev?.status === "em_risco"
         ? el("span", { class: "tag", style: "border-color:var(--danger);color:var(--danger)" }, "em risco")
         : ev?.status === "cancelado"
@@ -228,9 +245,13 @@ function kindBlock(dayIso, kind, label, past) {
         disabled: locked ? "" : null,
         onclick: () => toggle(dayIso, kind, !mine),
       }, mine ? "Desmarcar" : `Estou dentro para o ${kind}`),
+      isAdmin && !past && isPossivel(ev)
+        ? el("button", { class: "btn small", onclick: () => renderPromotePanel(ev) },
+            "Confirmar show")
+        : null,
       mine && ev?.show_id
         ? el("span", { class: "muted", style: "font-size:13px" },
-            "Já virou show — fale com o admin para desmarcar.")
+            "Show confirmado — fale com o admin para desmarcar.")
         : null,
     ),
   );
@@ -248,8 +269,9 @@ function renderDayPanel(dayIso, matchKind = null, riskKind = null) {
     el("div", { class: "modal-body" },
       el("div", { id: "day-msg", class: "notice", hidden: "" }),
       matchKind
-        ? el("div", { class: "matchbanner" },
-            `🎉 Fechou! Toda a banda topou — ${matchKind} confirmado em ${fmtDate(dayIso)}.`)
+        ? el("div", { class: "matchbanner" }, matchKind === "show"
+            ? `🎉 Fechou! Toda a banda topou — ${fmtDate(dayIso)} é possível show. Agora falta acertar com a casa; quando fechar, o admin confirma aqui.`
+            : `🎉 Fechou! Toda a banda topou — ensaio confirmado em ${fmtDate(dayIso)}.`)
         : null,
       riskKind
         ? el("div", { class: "notice error" },
@@ -280,9 +302,11 @@ function renderEvents() {
     return;
   }
 
+  // ordenar por status usa o rótulo derivado — senão "possível show" e
+  // "show confirmado" se agrupariam (ambos são 'confirmado' no banco)
   const list = [...events].sort((a, b) => {
-    const va = a[evSort.by] ?? "";
-    const vb = b[evSort.by] ?? "";
+    const va = evSort.by === "status" ? statusLabel(a) : a[evSort.by] ?? "";
+    const vb = evSort.by === "status" ? statusLabel(b) : b[evSort.by] ?? "";
     return evSort.dir * String(va).localeCompare(String(vb), "pt-BR");
   });
 
@@ -298,7 +322,7 @@ function renderEvents() {
 
   const statusCell = (ev) =>
     ev.status === "confirmado"
-      ? el("span", { class: "tag aberta" }, "confirmado")
+      ? el("span", { class: isPossivel(ev) ? "tag poss" : "tag aberta" }, statusLabel(ev))
       : ev.status === "em_risco"
         ? el("span", { class: "tag", style: "border-color:var(--danger);color:var(--danger)" }, "em risco")
         : el("span", { class: "tag encerrada" }, "cancelado");
@@ -306,9 +330,9 @@ function renderEvents() {
   const actions = (ev) => {
     if (!isAdmin) return null;
     const btns = [];
-    if (ev.kind === "show" && ev.status === "confirmado" && !ev.show_id) {
-      btns.push(el("button", { class: "iconbtn", title: "Promover a show",
-        onclick: () => renderPromotePanel(ev) }, "→ show"));
+    if (isPossivel(ev)) {
+      btns.push(el("button", { class: "iconbtn", title: "Confirmar show",
+        onclick: () => renderPromotePanel(ev) }, "✔ confirmar"));
     }
     if (!ev.show_id && ev.status !== "cancelado") {
       btns.push(el("button", { class: "iconbtn", title: "Cancelar evento",
@@ -346,12 +370,12 @@ function renderPromotePanel(ev) {
 
   $("modal").replaceChildren(
     el("header", {},
-      el("h3", {}, "Promover a show · " + fmtDate(ev.day)),
+      el("h3", {}, "Confirmar show · " + fmtDate(ev.day)),
       el("button", { class: "iconbtn", title: "Fechar", onclick: closeModal }, "✕")),
     el("div", { class: "modal-body" },
       el("div", { id: "day-msg", class: "notice", hidden: "" }),
       el("p", { class: "muted" },
-        "Cria o show com estes dados, ainda oculto do site público — revise e publique na página Shows."),
+        "A data já está fechada pela banda — confirme aqui o acerto com a casa. O show nasce oculto do site público; revise e publique na página Shows."),
       el("div", { class: "field", style: "margin:10px 0" }, el("label", { for: "pr-venue" }, "Local"), venue),
       el("div", { class: "field", style: "margin:10px 0" }, el("label", { for: "pr-city" }, "Cidade"), city),
       el("div", { class: "field", style: "margin:10px 0" }, el("label", { for: "pr-notes" }, "Observações"), notes)),
@@ -365,9 +389,9 @@ function renderPromotePanel(ev) {
         });
         if (error) return show($("day-msg"), error.message, "error");
         closeModal();
-        show($("msg"), "Show criado (oculto do site) — complete os dados na página Shows.", "ok");
+        show($("msg"), "Show confirmado (ainda oculto do site) — complete os dados na página Shows.", "ok");
         await refresh();
-      } }, "Criar show")),
+      } }, "Confirmar show")),
   );
   $("overlay").hidden = false;
 }
@@ -489,10 +513,13 @@ function renderNextEvents() {
         title: "Ver o dia " + fmtDate(e.day),
         onclick: () => renderDayPanel(e.day),
       },
-        el("span", { class: "evicon " + e.kind }, e.kind === "show" ? "★" : "♪"),
+        el("span", { class: "evicon " + e.kind + (isPossivel(e) ? " poss" : "") },
+          e.kind === "show" ? (isPossivel(e) ? "☆" : "★") : "♪"),
         el("span", { class: "d" },
           `${DIAS_LONGOS[new Date(e.day + "T12:00:00").getDay()].slice(0, 3)} ${fmtDate(e.day)}`),
-        el("span", { class: "k" }, e.kind === "show" ? "Show" : "Ensaio")))
+        el("span", { class: "k" }, e.kind === "show"
+          ? (isPossivel(e) ? "Possível show" : (e.show?.venue ?? "Show"))
+          : "Ensaio")))
     : [el("li", { class: "empty" },
         "Nada agendado ainda — marque seus dias no calendário.")]));
 }
