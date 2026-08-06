@@ -76,3 +76,4 @@ select c.id, c.title, c.artist, c.status, m.name as sugerida_por
 from public.candidates c
 left join public.members m on m.id = c.suggested_by
 where public.slugify(c.title) = 'rosanna';
+

@@ -11,8 +11,7 @@ with admin as (
 ),
 janelas(start_date, end_date) as (
   values
-    (date '2026-07-24', date '2026-07-26'),  --  1: 3 dias
-    (date '2026-08-05', date '2026-08-09'),  --  2: 5 dias
+    (date '2026-08-05', date '2026-08-08'),  --  2: 4 dias
     (date '2026-08-27', date '2026-08-30'),  --  3: 4 dias
     (date '2026-09-08', date '2026-09-13'),  --  4: 6 dias
     (date '2026-09-21', date '2026-09-23'),  --  5: 3 dias
