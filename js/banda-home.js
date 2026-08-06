@@ -84,23 +84,22 @@ async function renderDash(session) {
   }
   if (parts.length) $("agenda-news").textContent = parts.join(" · ");
 
-  // próximos 6 eventos (shows reais + eventos da agenda): ★ show confirmado,
-  // ☆ possível show (banda topou, casa não fechada), ♪ ensaio.
-  // Evento já promovido a show (show_id) sai da lista — o show real cobre.
+  // próximos 6 eventos: ★ show confirmado (tabela shows), ♪ ensaio da agenda.
+  // Possível show (evento de show sem show_id) fica fora — só aparece quando
+  // o admin fecha a casa; evento já promovido também sai (o show real cobre).
   const DIAS = ["dom", "seg", "ter", "qua", "qui", "sex", "sáb"];
   const upcoming = [
     ...(nextShows.data ?? []).map((s) => ({
       day: s.date, kind: "show", label: s.venue, href: "shows.html" })),
-    ...(agEvents.data ?? []).filter((e) => !e.show_id).map((e) => ({
-      day: e.day, kind: e.kind, poss: e.kind === "show",
-      label: e.kind === "show" ? "Possível show" : "Ensaio", href: "agenda.html" })),
+    ...(agEvents.data ?? []).filter((e) => e.kind === "ensaio").map((e) => ({
+      day: e.day, kind: e.kind, label: "Ensaio", href: "agenda.html" })),
   ].sort((a, b) => a.day.localeCompare(b.day)).slice(0, 6);
   if (upcoming.length) {
     $("next-box").hidden = false;
     $("next-list").replaceChildren(...upcoming.map((ev) =>
       el("li", { class: "link", onclick: () => { location.href = ev.href; } },
-        el("span", { class: "evicon " + ev.kind + (ev.poss ? " poss" : "") },
-          ev.kind === "show" ? (ev.poss ? "☆" : "★") : "♪"),
+        el("span", { class: "evicon " + ev.kind },
+          ev.kind === "show" ? "★" : "♪"),
         el("span", { class: "d" },
           `${DIAS[new Date(ev.day + "T12:00:00").getDay()]} ${fmtDate(ev.day)}`),
         el("span", { class: "k" }, ev.label))));

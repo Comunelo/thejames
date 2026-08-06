@@ -511,9 +511,11 @@ function renderAdmin() {
 }
 
 // ---------- próximos eventos ----------
+// Só ensaios e shows confirmados — possível show fica de fora até o admin
+// fechar a casa (ele continua visível no calendário e no modal do dia).
 function renderNextEvents() {
   const future = events
-    .filter((e) => e.status === "confirmado" && e.day >= todayIso)
+    .filter((e) => e.status === "confirmado" && !isPossivel(e) && e.day >= todayIso)
     .sort((a, b) => a.day.localeCompare(b.day));
   $("next-events").replaceChildren(...(future.length
     ? future.map((e) => el("li", {
@@ -521,12 +523,12 @@ function renderNextEvents() {
         title: "Ver o dia " + fmtDate(e.day),
         onclick: () => renderDayPanel(e.day),
       },
-        el("span", { class: "evicon " + e.kind + (isPossivel(e) ? " poss" : "") },
-          e.kind === "show" ? (isPossivel(e) ? "☆" : "★") : "♪"),
+        el("span", { class: "evicon " + e.kind },
+          e.kind === "show" ? "★" : "♪"),
         el("span", { class: "d" },
           `${DIAS_LONGOS[new Date(e.day + "T12:00:00").getDay()].slice(0, 3)} ${fmtDate(e.day)}`),
         el("span", { class: "k" }, e.kind === "show"
-          ? (isPossivel(e) ? "Possível show" : (e.show?.venue ?? "Show"))
+          ? (e.show?.venue ?? "Show")
           : "Ensaio")))
     : [el("li", { class: "empty" },
         "Nada agendado ainda — marque seus dias no calendário.")]));
