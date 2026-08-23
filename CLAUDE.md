@@ -80,6 +80,12 @@ Setup completo e passos pendentes: ver README.md.
 
 ## Cuidados neste ambiente
 - `git push` pode falhar com erro HTTP2 → usar `git -c http.version=HTTP/1.1 push`.
+- O Supabase free tier PAUSA o projeto após ~1 semana sem atividade de API
+  (aconteceu em 23/08/2026: host `lpadlajkeqepdabitgvp.supabase.co` vira
+  NXDOMAIN e o backstage inteiro cai). Remédio: admin restaura no painel
+  (supabase.com/dashboard → Restore project, ~2 min, dados preservados).
+  Prevenção: `.github/workflows/keep-alive.yml` pinga a API REST 2x/semana
+  (seg+qui); se a run ficar vermelha, o projeto provavelmente pausou de novo.
 - `js/config.js` contém a anon key do Supabase — pública por design, não é segredo.
 - Login do backstage é usuário + senha (Supabase Auth com e-mail sintético
   `<usuario>@thejames.local`; usuário = nome slugificado, senha inicial =
